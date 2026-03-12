@@ -1,12 +1,252 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>StudyDeck</title>
-  </head>
-  <body style="margin:0">
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classroom Hub | Linked</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ease: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --black: #000000;
+            --white: #ffffff;
+            --border: 2.5px solid var(--black);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; color: var(--black); overflow-x: hidden; }
+
+        /* --- HEADER & LOADER --- */
+        header.main-nav {
+            background: var(--white);
+            border-bottom: var(--border);
+            padding: 15px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo { font-weight: 800; font-size: 1.4rem; letter-spacing: -1px; }
+
+        #loader {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+        }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 4px solid rgba(0,0,0,0.1);
+            border-left-color: var(--black);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .container { max-width: 900px; margin: 30px auto; padding: 0 20px; transition: opacity 0.3s ease; }
+
+        /* --- TIMER --- */
+        .timer-container {
+            background: var(--white);
+            border: var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 8px 8px 0 var(--black);
+            transition: transform 0.3s var(--ease);
+        }
+        .timer-container:hover { transform: translate(-4px, -4px); box-shadow: 12px 12px 0 var(--black); }
+        .timer-label { font-weight: 800; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 2px; margin-bottom: 12px; color: #ff4757; }
+        .timer-display { display: flex; gap: 10px; align-items: center; }
+        .timer-segment { text-align: center; min-width: 45px; }
+        .timer-value { font-size: 1.8rem; font-weight: 800; line-height: 1; }
+        .timer-unit { font-size: 0.55rem; font-weight: 700; text-transform: uppercase; opacity: 0.5; }
+
+        /* --- BULLETIN --- */
+        .bulletin-board {
+            background: var(--white);
+            border: var(--border);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 40px;
+            box-shadow: 10px 10px 0 rgba(0,0,0,0.05);
+        }
+        .board-header { font-weight: 800; text-transform: uppercase; font-size: 0.85rem; margin-bottom: 15px; }
+        .announcement-note {
+            background: #fffbeb;
+            border: 2px solid var(--black);
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+            transition: transform 0.3s var(--ease);
+        }
+        .announcement-note:hover { transform: translate(-4px, -4px); box-shadow: 6px 6px 0 var(--black); }
+
+        /* --- FOLDERS --- */
+        section { margin-bottom: 40px; }
+        .section-header { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; font-weight: 800; margin-bottom: 15px; color: #888; }
+        
+        .folder-box {
+            padding: 25px;
+            border: var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            color: white;
+            margin-bottom: 15px;
+            transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+        }
+        .folder-box:hover { transform: translate(-6px, -8px); box-shadow: 10px 10px 0 var(--black); }
+        .folder-box:active { transform: translate(-2px, -2px) scale(0.98); box-shadow: 2px 2px 0 var(--black); transition: 0.1s; }
+
+        .feat-grad { background: linear-gradient(135deg, #6366f1, #a855f7); }
+        .recent-grad { background: linear-gradient(135deg, #0ea5e9, #2563eb); }
+
+        /* --- SUBJECT VIEW --- */
+        #subject-view { display: none; animation: slideUp 0.4s var(--ease); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } }
+        
+        .file-link { 
+            text-decoration: none; color: inherit; display: block; margin-bottom: 10px;
+        }
+        .file-row { 
+            background: white; border: var(--border); padding: 18px; 
+            border-radius: 10px; display: flex; justify-content: space-between; 
+            font-weight: 600; transition: 0.3s var(--ease); 
+        }
+        .file-row:hover { transform: translate(-4px, -4px); box-shadow: 6px 6px 0 var(--black); background: #fdfdfd; }
+
+        .back-btn { padding: 12px 20px; background: var(--black); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; margin-bottom: 30px; }
+
+    </style>
+</head>
+<body>
+
+<header class="main-nav"><div class="logo">REVIEWER.io</div></header>
+<div id="loader"><div class="spinner"></div></div>
+
+<div class="container" id="main-content">
+    <div id="dashboard-ui">
+        <div class="timer-container">
+            <div class="timer-label">⏳ Final Exams: March 31, 2026</div>
+            <div class="timer-display" id="exam-timer">
+                <div class="timer-segment"><div class="timer-value" id="days">00</div><div class="timer-unit">Days</div></div>
+                <div style="font-weight:800;">:</div>
+                <div class="timer-segment"><div class="timer-value" id="hours">00</div><div class="timer-unit">Hrs</div></div>
+                <div style="font-weight:800;">:</div>
+                <div class="timer-segment"><div class="timer-value" id="minutes">00</div><div class="timer-unit">Min</div></div>
+                <div style="font-weight:800;">:</div>
+                <div class="timer-segment"><div class="timer-value" id="seconds">00</div><div class="timer-unit">Sec</div></div>
+            </div>
+        </div>
+
+        <div class="bulletin-board">
+            <div class="board-header">📌 School Bulletin</div>
+            <div class="announcement-note">
+                <span class="note-date">WELCOME!</span>
+                <p class="note-text">Click any subject folder to access the study links.</p>
+            </div>
+        </div>
+
+        <section>
+            <h2 class="section-header">Featured Subjects</h2>
+            <div class="folder-box feat-grad" onclick="openSubject('Mathematics')">
+                <h3>Mathematics</h3>
+                <p>Linear Equations, Real-world problems and Probability</p>
+            </div>
+            <div class="folder-box feat-grad" onclick="openSubject('Science')">
+                <h3>Science</h3>
+                <p>Speed, Velocity, Acceleration and Graphs</p>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="section-header">Recently Opened</h2>
+            <div class="folder-box recent-grad" onclick="openSubject('AP')">
+                <h3>Araling Panlipunan</h3>
+                <p>Sustainable Development Goals #1 to #17, Global Warming, Terorismo, IGC and NGC</p>
+            </div>
+        </section>
+    </div>
+
+    <div id="subject-view">
+        <button class="back-btn" onclick="goBack()">← Back</button>
+        <h1 id="subject-title" style="margin-bottom: 25px; font-size: 2.2rem;">Subject</h1>
+        <div id="file-list"></div>
+    </div>
+</div>
+
+<script>
+    // --- EDIT YOUR LINKS HERE ---
+    // Format: 'Folder Name': [ { name: 'Display Name', url: 'LINK_HERE' } ]
+    const data = {
+        'Mathematics': [
+            
+        ],
+        'Science': [
+            { name: 'Science Reviewer - Incomplete/Unfinished', url: 'https://1drv.ms/w/c/b38591e40349d389/IQDX7RWYkao4QKrdF7D95TL9ASsXC1VRZ0o9j2zDozi2bYM?e=9AQF4U' },
+        ],
+        'AP': [
+            
+        ]
+    };
+
+    function runTimer() {
+        const target = new Date("March 31, 2026 00:00:00").getTime();
+        const now = new Date().getTime();
+        const diff = target - now;
+        if (diff > 0) {
+            document.getElementById("days").innerText = Math.floor(diff / (1000 * 60 * 60 * 24)).toString().padStart(2, '0');
+            document.getElementById("hours").innerText = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
+            document.getElementById("minutes").innerText = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+            document.getElementById("seconds").innerText = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0');
+        }
+    }
+    setInterval(runTimer, 1000);
+    runTimer();
+
+    function openSubject(name) {
+        const loader = document.getElementById('loader');
+        const content = document.getElementById('main-content');
+        loader.style.display = 'block';
+        content.style.opacity = '0.3';
+
+        setTimeout(() => {
+            loader.style.display = 'none';
+            content.style.opacity = '1';
+            document.getElementById('dashboard-ui').style.display = 'none';
+            document.getElementById('subject-view').style.display = 'block';
+            document.getElementById('subject-title').innerText = name;
+
+            const list = document.getElementById('file-list');
+            list.innerHTML = '';
+            
+            data[name].forEach(file => {
+                const anchor = document.createElement('a');
+                anchor.className = 'file-link';
+                anchor.href = file.url;
+                anchor.target = '_blank'; // Opens in new tab
+                
+                anchor.innerHTML = `
+                    <div class="file-row">
+                        <span>📄 ${file.name}</span>
+                        <span style="font-size: 0.7rem; border: 1.5px solid black; padding: 2px 8px; border-radius: 4px;">OPEN LINK</span>
+                    </div>
+                `;
+                list.appendChild(anchor);
+            });
+        }, 400); 
+    }
+
+    function goBack() { 
+        document.getElementById('dashboard-ui').style.display = 'block'; 
+        document.getElementById('subject-view').style.display = 'none'; 
+    }
+</script>
+</body>
 </html>
