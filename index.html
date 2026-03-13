@@ -52,7 +52,7 @@
         .timer-container {
             background: var(--white);
             border: var(--border);
-            border-radius: 12px;
+            border-radius: 5px;
             padding: 20px;
             margin-bottom: 30px;
             display: flex;
@@ -72,21 +72,57 @@
         .bulletin-board {
             background: var(--white);
             border: var(--border);
-            border-radius: 16px;
+            border-radius: 5px;
+            padding: 25px;
+            margin-bottom: 40px;
+            box-shadow: 10px 10px 0 rgba(0,0,0,0.05);
+        }
+        .wrapped {
+            background: var(--white);
+            border: var(--border);
+            border-radius: 5px;
             padding: 25px;
             margin-bottom: 40px;
             box-shadow: 10px 10px 0 rgba(0,0,0,0.05);
         }
         .board-header { font-weight: 800; text-transform: uppercase; font-size: 0.85rem; margin-bottom: 15px; }
         .announcement-note {
-            background: #fffbeb;
-            border: 2px solid var(--black);
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 12px;
-            transition: transform 0.3s var(--ease);
+             background: #fffbeb;
+             border: 2px solid var(--black);
+             padding: 15px;
+             border-radius: 4px;
+             margin-bottom: 12px;
+             transition: transform 0.3s var(--ease);
+             transform: rotate(-2deg);
+             box-shadow: 4px 4px 8px rgba(0,0,0,0.1), -2px -2px 6px rgba(0,0,0,0.05);
+             position: relative;
         }
-        .announcement-note:hover { transform: translate(-4px, -4px); box-shadow: 6px 6px 0 var(--black); }
+
+        .announcement-note:nth-child(2) {
+            transform: rotate(1.5deg);
+        }
+
+        .announcement-note:nth-child(3) {
+            transform: rotate(-1deg);
+        }
+
+        .announcement-note:hover { 
+            transform: rotate(-2deg) translate(-4px, -4px); 
+            box-shadow: 8px 8px 12px rgba(0,0,0,0.15), -2px -2px 6px rgba(0,0,0,0.05);
+        }
+        
+        .announcement-note::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 15px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 50%;
+            filter: blur(3px);
+        }
 
         /* --- FOLDERS --- */
         section { margin-bottom: 40px; }
@@ -95,7 +131,7 @@
         .folder-box {
             padding: 25px;
             border: var(--border);
-            border-radius: 12px;
+            border-radius: 5px;
             cursor: pointer;
             color: white;
             margin-bottom: 15px;
@@ -116,24 +152,24 @@
         }
         .file-row { 
             background: white; border: var(--border); padding: 18px; 
-            border-radius: 10px; display: flex; justify-content: space-between; 
+            border-radius: 5px; display: flex; justify-content: space-between; 
             font-weight: 600; transition: 0.3s var(--ease); 
         }
         .file-row:hover { transform: translate(-4px, -4px); box-shadow: 6px 6px 0 var(--black); background: #fdfdfd; }
 
-        .back-btn { padding: 12px 20px; background: var(--black); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; margin-bottom: 30px; }
+        .back-btn { padding: 12px 20px; background: var(--black); color: white; border: none; border-radius: 5px; font-weight: 700; cursor: pointer; margin-bottom: 30px; }
 
     </style>
 </head>
 <body>
 
-<header class="main-nav"><div class="logo">REVIEWER.io</div></header>
+<header class="main-nav"><div class="logo">8-MERCURY</div></header>
 <div id="loader"><div class="spinner"></div></div>
 
 <div class="container" id="main-content">
     <div id="dashboard-ui">
         <div class="timer-container">
-            <div class="timer-label">⏳ END OF S.Y. RITES: March 31, 2026</div>
+            <div class="timer-label">END OF S.Y. RITES - March 31, 2026</div>
             <div class="timer-display" id="exam-timer">
                 <div class="timer-segment"><div class="timer-value" id="days">00</div><div class="timer-unit">Days</div></div>
                 <div style="font-weight:800;">:</div>
@@ -144,12 +180,17 @@
                 <div class="timer-segment"><div class="timer-value" id="seconds">00</div><div class="timer-unit">Sec</div></div>
             </div>
         </div>
-
         <div class="bulletin-board">
-            <div class="board-header">📌 School Bulletin</div>
+            <div class="board-header">📌 School Bulletin ~ Fri, Mar 13 - 7:21pm</div>
             <div class="announcement-note">
-                <span class="note-date">WELCOME!</span>
-                <p class="note-text">Click any subject folder to access the study links.</p>
+                <span class="note-date"></span>
+                <p class="note-text">No deadlines/assignments for today.</p>
+            </div>
+        </div>
+        <div class="bulletin-board">
+            <div class="board-header">📌 Announcements</div>
+            <div class="announcement-note">
+                <p class="note-text">Our MAPEH performance will be held on Monday. I advice you to ready your costume before the said date and practice on some steps you're confused with. Good luck for all of us!</p>
             </div>
         </div>
 
@@ -167,9 +208,9 @@
 
         <section>
             <h2 class="section-header">Recently Opened</h2>
-            <div class="folder-box recent-grad" onclick="openSubject('AP')">
-                <h3>Araling Panlipunan</h3>
-                <p>Sustainable Development Goals #1 to #17, Global Warming, Terorismo, IGC and NGC</p>
+            <div class="folder-box recent-grad" onclick="openSubject('Filipino')">
+                <h3>Filipino</h3>
+                <p>Florante at Laura / Tayutay</p>
             </div>
         </section>
     </div>
@@ -191,7 +232,7 @@
         'Science': [
             { name: 'Science Reviewer - Incomplete/Unfinished', url: 'https://1drv.ms/w/c/b38591e40349d389/IQDX7RWYkao4QKrdF7D95TL9ASsXC1VRZ0o9j2zDozi2bYM?e=9AQF4U' },
         ],
-        'AP': [
+        'Filipino': [
             
         ]
     };
