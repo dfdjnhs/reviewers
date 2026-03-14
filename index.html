@@ -28,6 +28,13 @@
             top: 0;
             z-index: 100;
         }
+        
+        p {
+            font-size: 0.55rem; 
+            font-weight: 700; 
+            text-transform: uppercase;
+        }
+        
         .logo { font-weight: 800; font-size: 1.4rem; letter-spacing: -1px; }
 
         #loader {
@@ -123,6 +130,89 @@
             border-radius: 50%;
             filter: blur(3px);
         }
+        
+        .feedback-form {
+    background: var(--white);
+    border: var(--border);
+    border-radius: 12px;
+    padding: 25px;
+    max-width: 500px;
+    margin: 30px;
+    box-shadow: 8px 8px 0 var(--black);
+    transition: transform 0.3s var(--ease);
+}
+
+.feedback-form:hover {
+    transform: translate(-4px, -4px);
+    box-shadow: 12px 12px 0 var(--black);
+}
+
+.form-title {
+    font-weight: 800;
+    font-size: 1.3rem;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.form-group {
+    margin-bottom: 18px;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-weight: 700;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+}
+
+.form-group input,
+.form-group textarea {
+    padding: 12px 15px;
+    border: 2px solid var(--black);
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    transition: 0.3s var(--ease);
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    background: #f0f0f0;
+    box-shadow: inset 0 0 0 2px var(--black);
+    transform: scale(1.02);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: #999;
+}
+
+.submit-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--black);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.3s var(--ease);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.submit-btn:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0 var(--black);
+}
+
+.submit-btn:active {
+    transform: translate(0, 0);
+    box-shadow: 2px 2px 0 var(--black);
+}
 
         /* --- FOLDERS --- */
         section { margin-bottom: 40px; }
@@ -140,8 +230,8 @@
         .folder-box:hover { transform: translate(-6px, -8px); box-shadow: 10px 10px 0 var(--black); }
         .folder-box:active { transform: translate(-2px, -2px) scale(0.98); box-shadow: 2px 2px 0 var(--black); transition: 0.1s; }
 
-        .feat-grad { background: linear-gradient(135deg, #6366f1, #a855f7); }
-        .recent-grad { background: linear-gradient(135deg, #0ea5e9, #2563eb); }
+        .feat-grad { background: darkseagreen; }
+
 
         /* --- SUBJECT VIEW --- */
         #subject-view { display: none; animation: slideUp 0.4s var(--ease); }
@@ -181,7 +271,7 @@
             </div>
         </div>
         <div class="bulletin-board">
-            <div class="board-header">📌 School Bulletin ~ Fri, Mar 13 - 7:21pm</div>
+            <div class="board-header">📌 Deadlines/Assignments ~ Fri, Mar 13 - 7:21pm</div>
             <div class="announcement-note">
                 <span class="note-date"></span>
                 <p class="note-text">No deadlines/assignments for today.</p>
@@ -190,29 +280,39 @@
         <div class="bulletin-board">
             <div class="board-header">📌 Announcements</div>
             <div class="announcement-note">
-                <p class="note-text">Our MAPEH performance will be held on Monday. I advice you to ready your costume before the said date and practice on some steps you're confused with. Good luck for all of us!</p>
+                <p class="note-text">FILIPINO Lesson 1 to 3 available!</p>
+                <br>
+                <div class="folder-box feat-grad" onclick="openSubject('Filipino')">
+                <h3>Filipino</h3>
+                <p>Lesson 1 to 3 now available!</p>
+            </div>
+            </div>
+            <div class="announcement-note">
+                <p class="note-text">MATH lesson 1 and 2 now Available!</p>
+                <br>
+                <div class="folder-box feat-grad" onclick="openSubject('Mathematics')">
+                <h3>Mathematics</h3>
+                <p>Lesson 1 and 2 now available!</p>
+            </div>
             </div>
         </div>
 
         <section>
-            <h2 class="section-header">Featured Subjects</h2>
+            <h2 class="section-header">New Reviewers</h2>
             <div class="folder-box feat-grad" onclick="openSubject('Mathematics')">
                 <h3>Mathematics</h3>
-                <p>Linear Equations, Real-world problems and Probability</p>
+                <p>Lesson 1 and 2 now Available!</p>
             </div>
             <div class="folder-box feat-grad" onclick="openSubject('Science')">
                 <h3>Science</h3>
-                <p>Speed, Velocity, Acceleration and Graphs</p>
+                <p>UNAVAILABLE</p>
+            </div>
+            <div class="folder-box feat-grad" onclick="openSubject('Filipino')">
+                <h3>Filipino</h3>
+                <p>Lesson 1 to 3 now available!</p>
             </div>
         </section>
 
-        <section>
-            <h2 class="section-header">Recently Opened</h2>
-            <div class="folder-box recent-grad" onclick="openSubject('Filipino')">
-                <h3>Filipino</h3>
-                <p>Florante at Laura / Tayutay</p>
-            </div>
-        </section>
     </div>
 
     <div id="subject-view">
@@ -221,19 +321,43 @@
         <div id="file-list"></div>
     </div>
 </div>
-
+<form action="https://formspree.io/f/mbdzkjle" method="POST" class="feedback-form">
+  <h3 class="form-title">📝 Request a Subject</h3>
+  <p>Please don't request inappropriate/offensive things in this field. — 🫶</p>
+  <br>
+  
+  <div class="form-group">
+    <label for="text">Name:</label>
+    <input type="text" name="name" id="name" placeholder="Your name" required>
+  </div>
+  
+  <div class="form-group">
+    <label for="subject">Subject:</label>
+    <input type="text" name="subject" id="subject" placeholder="Subject Here" required>
+  </div>
+  
+  <div class="form-group">
+    <label for="Topic">Topic:</label>
+    <input type="text" name="topic" id="topic" placeholder="Topic/Lesson" required>
+  </div>
+  
+  <button type="submit" class="submit-btn">Send Request</button>
+</form>
 <script>
     // --- EDIT YOUR LINKS HERE ---
     // Format: 'Folder Name': [ { name: 'Display Name', url: 'LINK_HERE' } ]
     const data = {
         'Mathematics': [
-            { name: 'Solving Linear Equations and Probability', url: 'https://1drv.ms/w/c/b38591e40349d389/IQAA_zw9RS-TQLNrsXCcurcaATBNq67SiEi7AIG6Zw-wCks?e=dStx6V' },
+            { name: 'Lesson 1 - Solving Linear Equations and Probability', url: 'https://1drv.ms/w/c/b38591e40349d389/IQDd8peVjQO-S7HZ0_zAh-vKAVQYKC_5Hieo_uKltVBhK3g?e=wJGywz' },
+            { name: 'Lesson 2 - Probability and Statistics', url: 'https://1drv.ms/w/c/b38591e40349d389/IQCch7B_NirCR7rSqomkvmjOAe2Agfukx-j39b27uzq_7BY?e=baEt67' },
         ],
         'Science': [
-            { name: 'Science Reviewer - Incomplete/Unfinished', url: 'https://1drv.ms/w/c/b38591e40349d389/IQDX7RWYkao4QKrdF7D95TL9ASsXC1VRZ0o9j2zDozi2bYM?e=9AQF4U' },
+            
         ],
         'Filipino': [
-            
+            { name: 'Lesson 1: Talambuhay ni Francisco Balagtas', url: 'https://1drv.ms/w/c/b38591e40349d389/IQA1dhTeTKWkS5BeMY0egFB_AUw89heJuJf6BYNgXhysfPM?e=V6YUCe' },
+            { name: 'Lesson 2 - Mga Uri ng Tayutay', url: 'https://1drv.ms/w/c/b38591e40349d389/IQCHIARpzYiXSrKtqzG-9IsMAVtkowVNduncAfwGIzbIx8w?e=IpUl9i' },
+            { name: 'Lesson 3 - Mga Tauhan at Buod ng Florante at Laura', url: 'https://1drv.ms/w/c/b38591e40349d389/IQDX7RWYkao4QKrdF7D95TL9ASsXC1VRZ0o9j2zDozi2bYM?e=9AQF4U' },
         ]
     };
 
@@ -289,5 +413,6 @@
         document.getElementById('subject-view').style.display = 'none'; 
     }
 </script>
+
 </body>
 </html>
