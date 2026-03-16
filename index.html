@@ -15,7 +15,11 @@
             --border: 2.5px solid var(--black);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { 
+            margin: 0px; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
         body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; color: var(--black); overflow-x: hidden; }
 
         /* --- HEADER & LOADER --- */
@@ -54,6 +58,15 @@
             animation: spin 0.8s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
+.video-wrapper {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            margin-bottom: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #000;
+        }
 
         .container { max-width: 900px; margin: 30px auto; padding: 0 20px; transition: opacity 0.3s ease; }
 
@@ -134,16 +147,15 @@
         }
         
         .feedback-form {
-    background: var(--white);
-    border: var(--border);
-    border-radius: 12px;
-    padding: 25px;
-    max-width: 500px;
-    margin: 30px;
-    box-shadow: 8px 8px 0 var(--black);
-    transition: transform 0.3s var(--ease);
-}
-
+            background: var(--white);
+            border: var(--border);
+            border-radius: 5px;
+            padding: 20px;
+            margin: 30px;
+            box-shadow: 8px 8px 0 var(--black);
+            transition: transform 0.3s var(--ease);
+        }
+        
 .feedback-form:hover {
     transform: translate(-4px, -4px);
     box-shadow: 12px 12px 0 var(--black);
@@ -297,11 +309,6 @@
                 <p>Lesson 1 and 2 now available!</p>
             </div>
             </div>
-            <div class="announcement-note">
-                <p class="note-text">UPCOMING</p>
-                <p>[Requested by: Mark One] Science - Speed and Velocity, Acceleration, Different Types of Graphs</p>
-                <p>English - Types of Letters, Parts of a Letter, Formal and Informal Letters</p>
-            </div>
         </div>
 
         <section>
@@ -312,7 +319,7 @@
             </div>
             <div class="folder-box feat-grad" onclick="openSubject('Science')">
                 <h3>Science</h3>
-                <p>UNAVAILABLE</p>
+                <p>Lesson 1 available!</p>
             </div>
             <div class="folder-box feat-grad" onclick="openSubject('Filipino')">
                 <h3>Filipino</h3>
@@ -328,6 +335,7 @@
         <div id="file-list"></div>
     </div>
 </div>
+
 <form action="https://formspree.io/f/mbdzkjle" method="POST" class="feedback-form">
   <h3 class="form-title">📝 Request a Subject</h3>
   <p>Please don't request inappropriate/offensive things in this field. — 🫶</p>
@@ -359,12 +367,12 @@
             { name: 'Lesson 2 - Probability and Statistics', url: 'https://1drv.ms/w/c/b38591e40349d389/IQCch7B_NirCR7rSqomkvmjOAe2Agfukx-j39b27uzq_7BY?e=baEt67' },
         ],
         'Science': [
-            
+            { name: 'Lesson 1 - Speed, Velocity, Acceleration, and Different Types of Graphs', url: 'https://1drv.ms/w/c/b38591e40349d389/IQClB9XmcTFDR5GtrnKFkgLoAR1ug-hZviHz12Mo7IfX4iw?e=iz5iMX' }, 
         ],
         'Filipino': [
             { name: 'Lesson 1: Talambuhay ni Francisco Balagtas', url: 'https://1drv.ms/w/c/b38591e40349d389/IQA1dhTeTKWkS5BeMY0egFB_AUw89heJuJf6BYNgXhysfPM?e=V6YUCe' },
             { name: 'Lesson 2 - Mga Uri ng Tayutay', url: 'https://1drv.ms/w/c/b38591e40349d389/IQCHIARpzYiXSrKtqzG-9IsMAVtkowVNduncAfwGIzbIx8w?e=IpUl9i' },
-            { name: 'Lesson 3 - Mga Tauhan at Buod ng Florante at Laura', url: 'https://1drv.ms/w/c/b38591e40349d389/IQBv0x7Q8FurQIHll242Y3V9AUU9QSGtijSt2aeQd2fkBww?e=34ISiE'},
+            { name: 'Lesson 3 - Mga Tauhan at Buod ng Florante at Laura', url: 'https://1drv.ms/w/c/b38591e40349d389/IQDX7RWYkao4QKrdF7D95TL9ASsXC1VRZ0o9j2zDozi2bYM?e=9AQF4U' },
         ]
     };
 
