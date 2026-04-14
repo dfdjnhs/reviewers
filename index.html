@@ -155,6 +155,55 @@
     opacity: 1;
     border-bottom: 3px solid var(--black);
 }
+/* Champion Blue Theme (#1 Spot) */
+.champion-card {
+    background-color: #2563eb !important; /* Electric Blue */
+    background-image: 
+        linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.1) 75%, transparent 75%, transparent);
+    background-size: 50px 50px;
+    border: 4px solid var(--black) !important;
+    position: relative;
+    animation: blue-shimmer 3s linear infinite;
+}
+
+/* The Shining Scanline Effect */
+.champion-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 50%; height: 100%;
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.3), transparent);
+    transform: skewX(-25deg);
+    animation: shine-sweep 3s infinite;
+    pointer-events: none;
+}
+
+@keyframes blue-shimmer {
+    0% { background-position: 0 0; }
+    100% { background-position: 50px 50px; }
+}
+
+@keyframes shine-sweep {
+    0% { left: -100%; }
+    100% { left: 200%; }
+}
+
+/* Ensure text and boxes pop on Blue */
+.champion-card .item-title, .champion-card .artist-name { color: white !important; }
+.champion-card .score-box { 
+    background: white !important; 
+    color: #2563eb !important; 
+    border-color: var(--black) !important;
+}
+
+/* Expanded Modal for Champion */
+.champion-modal {
+    background-color: #1e40af !important; /* Darker Blue */
+    color: white !important;
+    border: 8px solid var(--black) !important;
+}
+.champion-modal h1, .champion-modal h2, .champion-modal h3 { color: white !important; }
+.champion-modal .track-row { border-bottom: 1px solid rgba(255,255,255,0.2); }
 
     </style>
     <link rel="manifest" href="manifest.json">
@@ -256,202 +305,62 @@
 </div>
 
 <script type="module">
+    // 1. Initial Data and State
     import { albums as initialAlbums, cinema as initialCinema } from './data.js';
 
     let localAlbums = JSON.parse(localStorage.getItem('vault_albums')) || [];
     let localCinema = JSON.parse(localStorage.getItem('vault_cinema')) || [];
     let allAlbums = [...initialAlbums, ...localAlbums];
     let allCinema = [...initialCinema, ...localCinema];
-    let currentCategory = '';
 
-    // --- UTILS ---
+    // 2. Helper Functions
+    const getTopId = (data) => {
+        if (!data.length) return null;
+        return [...data].sort((a, b) => parseFloat(b.score) - parseFloat(a.score))[0].id;
+    };
+
     function getScoreColor(scoreStr) {
         const s = parseFloat(scoreStr);
-        if (s >= 90) return "#22c55e";
-        if (s >= 70) return "#eab308";
-        if (s >= 50) return "#f97316";
-        return "#ef4444";
+        if (s >= 90) return "#22c55e"; // Green
+        if (s >= 70) return "#eab308"; // Yellow
+        return "#ef4444"; // Red
     }
 
-    function showLoader(cb) {
-        const loader = document.getElementById('loader');
-        const fill = document.getElementById('fill');
-        loader.style.display = 'flex';
-        fill.style.width = '0%';
-        fill.style.animation = 'none';
-        void fill.offsetWidth; 
-        fill.style.animation = 'progress 1.2s ease-in-out forwards';
-        setTimeout(() => { loader.style.display = 'none'; cb(); }, 1200);
-    }
+    // 3. Page Switching Logic
+    window.showPage = function(pageId) {
+        document.querySelectorAll('.page-view').forEach(p => p.style.display = 'none');
+        document.getElementById('page-' + pageId).style.display = 'block';
+        
+        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('nav-' + pageId).classList.add('active');
 
-    // --- ADMIN LOGIC ---
-    window.toggleDrawer = (show) => {
-        document.getElementById('admin-drawer').style.display = show ? 'block' : 'none';
-        if(show) resetAdmin();
+        if (pageId === 'home') render();
+        if (pageId === 'rank-albums') renderSpecificRankings('album');
+        if (pageId === 'rank-series') renderSpecificRankings('cinema');
     };
 
-    window.selectCategory = (cat) => {
-        currentCategory = cat;
-        document.getElementById('admin-step-1').style.display = 'none';
-        document.getElementById('admin-step-2').style.display = 'block';
-        const isAlb = cat === 'album';
-        document.getElementById('album-only-fields').style.display = isAlb ? 'block' : 'none';
-        document.getElementById('entry-score').readOnly = isAlb;
-        document.getElementById('form-title').innerText = isAlb ? 'NEW ALBUM' : 'NEW CINEMA';
-        if(isAlb) {
-            document.getElementById('track-input-container').innerHTML = '';
-            addTrackInput();
-        }
-    };
+    // 4. Main Render (The Vault Home)
+    function render() {
+        const topAlbumId = getTopId(allAlbums);
+        const topCinemaId = getTopId(allCinema);
 
-    window.addTrackInput = () => {
-        const container = document.getElementById('track-input-container');
-        const div = document.createElement('div');
-        div.className = 'track-input-row';
-        div.innerHTML = `
-            <input type="text" class="t-name" placeholder="Name" oninput="calculateAvg()">
-            <input type="number" class="t-score" placeholder="0-100" oninput="calculateAvg()">
-            <label><input type="checkbox" class="t-exclude" onchange="calculateAvg()"><span>EXCL</span></label>
-            <button onclick="this.parentElement.remove(); calculateAvg();" style="background:red; color:white; border:none; padding:5px;">X</button>
-        `;
-        container.appendChild(div);
-    };
-
-    window.calculateAvg = () => {
-        if (currentCategory !== 'album') return;
-        const rows = document.querySelectorAll('.track-input-row');
-        let total = 0, count = 0;
-        rows.forEach(r => {
-            const s = parseFloat(r.querySelector('.t-score').value);
-            const ex = r.querySelector('.t-exclude').checked;
-            if (!isNaN(s) && !ex) { total += s; count++; }
-        });
-        const avg = count > 0 ? (total / count).toFixed(1) : 0;
-        document.getElementById('live-avg').innerText = avg;
-        document.getElementById('entry-score').value = avg;
-    };
-
-    window.resetAdmin = () => {
-        document.getElementById('admin-step-1').style.display = 'block';
-        document.getElementById('admin-step-2').style.display = 'none';
-        document.querySelectorAll('#admin-step-2 input, #admin-step-2 textarea').forEach(i => i.value = '');
-        document.getElementById('live-avg').innerText = '0';
-    };
-
-    document.getElementById('save-btn').onclick = () => {
-        const newItem = {
-            id: Date.now(),
-            title: document.getElementById('entry-title').value,
-            score: document.getElementById('entry-score').value,
-            img: document.getElementById('entry-img').value || 'https://via.placeholder.com/300',
-            review: document.getElementById('entry-review').value
-        };
-
-        if (currentCategory === 'album') {
-            newItem.artist = document.getElementById('entry-sub').value;
-            newItem.type = "ALBUM";
-            newItem.tracks = Array.from(document.querySelectorAll('.track-input-row')).map(r => ({
-                name: r.querySelector('.t-name').value,
-                rating: r.querySelector('.t-score').value + "/100",
-                excluded: r.querySelector('.t-exclude').checked
-            }));
-            localAlbums.push(newItem);
-            localStorage.setItem('vault_albums', JSON.stringify(localAlbums));
-            allAlbums.push(newItem);
-        } else {
-            newItem.cast = document.getElementById('entry-sub').value;
-            newItem.poster = newItem.img;
-            newItem.type = "CINEMA";
-            localCinema.push(newItem);
-            localStorage.setItem('vault_cinema', JSON.stringify(localCinema));
-            allCinema.push(newItem);
-        }
-        render();
-        toggleDrawer(false);
-    };
-
-    // --- CORE LOGIC ---
-    window.deleteEntry = (e, id, type) => {
-        e.stopPropagation();
-        if (!confirm("Delete?")) return;
-        if (type === 'album') {
-            allAlbums = allAlbums.filter(a => a.id != id);
-            localAlbums = localAlbums.filter(a => a.id != id);
-            localStorage.setItem('vault_albums', JSON.stringify(localAlbums));
-        } else {
-            allCinema = allCinema.filter(c => c.id != id);
-            localCinema = localCinema.filter(c => c.id != id);
-            localStorage.setItem('vault_cinema', JSON.stringify(localCinema));
-        }
-        render();
-    };
-// --- PAGE SWITCHING ---
-window.showPage = function(pageId) {
-    // Hide all pages
-    document.querySelectorAll('.page-view').forEach(p => p.style.display = 'none');
-    
-    // Show selected page
-    document.getElementById('page-' + pageId).style.display = 'block';
-    
-    // Update Nav UI
-    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-    document.getElementById('nav-' + pageId).classList.add('active');
-
-    // Trigger specific renders
-    if (pageId === 'home') render(); // Refresh the main scroll lists
-    if (pageId === 'rank-albums') renderSpecificRankings('album');
-    if (pageId === 'rank-series') renderSpecificRankings('cinema');
-};
-
-function renderSpecificRankings(type) {
-    const containerId = type === 'album' ? 'album-rank-container' : 'series-rank-container';
-    const data = type === 'album' ? allAlbums : allCinema;
-    const container = document.getElementById(containerId);
-    
-    // Sort specific data by score (Descending)
-    const sorted = [...data].sort((a, b) => parseFloat(b.score) - parseFloat(a.score));
-    
-    container.innerHTML = sorted.map((item, index) => {
-        const isElite = parseFloat(item.score) >= 94;
-        return `
-            <div class="rank-row ${isElite ? 'elite-card' : ''}" onclick="openModal('${item.id}', '${type}')">
-                <div class="rank-number">#${index + 1}</div>
-                <img src="${item.img || item.poster}" class="rank-img">
-                <div class="rank-info">
-                    <h4>${item.title}</h4>
-                    <p>${item.artist || item.cast || ''}</p>
-                </div>
-                <div class="score-box" style="background:${getScoreColor(item.score)}">${item.score}</div>
-            </div>
-        `;
-    }).join('');
-}
-
-
-// Ensure renderRankings is called whenever a new entry is saved
-const originalSave = document.getElementById('save-btn').onclick;
-document.getElementById('save-btn').onclick = () => {
-    originalSave(); // Execute existing save logic
-    if (document.getElementById('page-rankings').style.display === 'block') {
-        renderRankings();
-    }
-};
-
-            function render() {
         // Render Albums
         document.getElementById('album-list').innerHTML = allAlbums.map(a => {
+            const isTop = a.id === topAlbumId;
             const isElite = parseFloat(a.score) >= 94;
+            const cardClass = isTop ? 'champion-card' : (isElite ? 'elite-card' : '');
+
             return `
-                <div class="card album-card ${isElite ? 'elite-card' : ''}" data-id="${a.id}">
+                <div class="card album-card ${cardClass}" onclick="openModal('${a.id}', 'album')">
                     <div class="delete-btn" onclick="deleteEntry(event, '${a.id}', 'album')">X</div>
-                    <span class="type-tag">ALBUM</span>
+                    <span class="type-tag">${isTop ? '🏆 NO. 1' : 'ALBUM'}</span>
                     <img src="${a.img}">
                     <div class="title-wrapper">
                         <div class="scroll-text-container">
                             <h3 class="item-title" style="font-weight:900;">${a.title}</h3>
                             <p class="artist-name">${a.artist}</p>
                         </div>
-                        <div class="score-box" style="background:${getScoreColor(a.score)}">${a.score}</div>
+                        <div class="score-box" style="background:${isTop ? 'white' : getScoreColor(a.score)}; color:${isTop ? '#2563eb' : 'white'}">${a.score}</div>
                     </div>
                 </div>
             `;
@@ -459,86 +368,245 @@ document.getElementById('save-btn').onclick = () => {
 
         // Render Cinema
         document.getElementById('series-list').innerHTML = allCinema.map(c => {
-    const isElite = parseFloat(c.score) >= 94;
-    return `
-        <div class="card series-card ${isElite ? 'elite-card' : ''}" data-id="${c.id}" style="width: 160px; flex: 0 0 auto;">
-            <div class="delete-btn" onclick="deleteEntry(event, '${c.id}', 'cinema')">X</div>
-            <span class="type-tag">CINEMA</span>
-            <img src="${c.poster || c.img}" style="height: 220px;">
-            <div class="title-wrapper">
-                <div class="scroll-text-container">
-                    <h3 class="item-title" style="font-size: 0.8rem; font-weight:900;">${c.title}</h3>
+            const isTop = c.id === topCinemaId;
+            const isElite = parseFloat(c.score) >= 94;
+            const cardClass = isTop ? 'champion-card' : (isElite ? 'elite-card' : '');
+
+            return `
+                <div class="card series-card ${cardClass}" onclick="openModal('${c.id}', 'cinema')">
+                    <div class="delete-btn" onclick="deleteEntry(event, '${c.id}', 'cinema')">X</div>
+                    <span class="type-tag">${isTop ? '🏆 NO. 1' : 'CINEMA'}</span>
+                    <img src="${c.poster || c.img}">
+                    <div class="title-wrapper">
+                        <div class="scroll-text-container">
+                            <h3 class="item-title" style="font-weight:900;">${c.title}</h3>
+                            <p class="artist-name">${c.cast || ''}</p>
+                        </div>
+                        <div class="score-box" style="background:${isTop ? 'white' : getScoreColor(c.score)}; color:${isTop ? '#2563eb' : 'white'}">${c.score}</div>
+                    </div>
                 </div>
-                <div class="score-box" style="background:${getScoreColor(c.score)}; font-size: 0.7rem; padding: 3px 5px;">${c.score}</div>
-            </div>
-        </div>
-    `;
-}).join('');
-
-
-        // Re-attach click events
-        document.querySelectorAll('.card').forEach(card => {
-            card.onclick = (e) => {
-                if(!e.target.classList.contains('delete-btn')) 
-                    openModal(card.dataset.id, card.classList.contains('album-card') ? 'album' : 'cinema');
-            };
-        });
+            `;
+        }).join('');
     }
 
-
-        function openModal(id, type) {
-        const item = type === 'album' ? allAlbums.find(a => a.id == id) : allCinema.find(c => c.id == id);
-        if(!item) return;
-
-        showLoader(() => {
-            const target = document.getElementById('modal-target');
+    // 5. Ranking Render
+    function renderSpecificRankings(type) {
+        const containerId = type === 'album' ? 'album-rank-container' : 'series-rank-container';
+        const data = type === 'album' ? allAlbums : allCinema;
+        const topId = getTopId(data);
+        const sorted = [...data].sort((a, b) => parseFloat(b.score) - parseFloat(a.score));
+        
+        document.getElementById(containerId).innerHTML = sorted.map((item, index) => {
+            const isTop = item.id === topId;
             const isElite = parseFloat(item.score) >= 94;
-            
-            // Toggle Elite class on the modal container itself
-            target.className = 'modal-content' + (isElite ? ' elite-modal' : '');
-            
-            if(type === 'album') {
-                target.innerHTML = `
-                    <div style="display:flex; gap:30px; flex-wrap:wrap;">
-                        <img src="${item.img}" style="width:300px; aspect-ratio:1/1; object-fit:cover; border:var(--border); box-shadow: 10px 10px 0 var(--black);">
-                        <div style="flex:1; min-width:300px;">
-                            <div style="display:flex; justify-content:space-between; align-items: flex-start;">
-                                <div><h1 style="font-size:3rem; line-height:0.9;">${item.title}</h1><h2 style="opacity:0.7;">${item.artist}</h2></div>
-                                <div class="score-box" style="background:${getScoreColor(item.score)}; font-size:1.5rem; padding:10px 15px;">${item.score}</div>
-                            </div>
-                            <p style="background:rgba(255,255,255,0.5); padding:15px; border:var(--border); margin:20px 0; font-weight:700;">${item.review || 'No review added.'}</p>
-                            <h3 style="border-bottom:var(--border); padding-bottom:5px; margin-bottom:10px;">TRACKLIST</h3>
-                            <div style="max-height: 250px; overflow-y: auto;">
-                                ${item.tracks ? item.tracks.map(t => `<div class="track-row"><span>${t.name}</span><strong>${t.rating}</strong></div>`).join('') : ''}
-                            </div>
-                        </div>
-                    </div>`;
-            } else {
-                target.innerHTML = `
-                    <div style="display:flex; gap:30px; flex-wrap:wrap;">
-                        <img src="${item.poster || item.img}" style="width:300px; aspect-ratio:11/16; object-fit:cover; border:var(--border); box-shadow: 10px 10px 0 var(--black);">
-                        <div style="flex:1; min-width:300px;">
-                            <div style="display:flex; justify-content:space-between; align-items: flex-start;">
-                                <h1 style="font-size:3rem; line-height:0.9;">${item.title}</h1>
-                                <div class="score-box" style="background:${getScoreColor(item.score)}; font-size:1.5rem; padding:10px 15px;">${item.score}</div>
-                            </div>
-                            <p style="margin: 10px 0;"><strong>CAST:</strong> ${item.cast || 'N/A'}</p>
-                            <div style="background:var(--black); color:white; padding:25px; margin-top:20px; border:var(--border);">
-                                <h3 style="color:white; font-size:0.7rem; letter-spacing:2px; margin-bottom:10px; opacity:0.6;">REVIEW SUMMARY</h3>
-                                <p style="font-style:italic; line-height:1.6;">"${item.review || 'No critique recorded.'}"</p>
-                            </div>
-                        </div>
-                    </div>`;
-            }
-            document.getElementById('overlay').style.display = 'block';
-        });
+            const specialClass = isTop ? 'champion-card' : (isElite ? 'elite-card' : '');
+
+            return `
+                <div class="rank-row ${specialClass}" onclick="openModal('${item.id}', '${type}')">
+                    <div class="rank-number">${isTop ? '👑' : '#' + (index + 1)}</div>
+                    <img src="${item.img || item.poster}" class="rank-img">
+                    <div class="rank-info">
+                        <h4 style="font-weight:900;">${item.title}</h4>
+                        <p>${item.artist || item.cast || ''}</p>
+                    </div>
+                    <div class="score-box" style="background:${isTop ? 'white' : getScoreColor(item.score)}; color:${isTop ? '#2563eb' : 'white'}">${item.score}</div>
+                </div>
+            `;
+        }).join('');
     }
 
+    // 6. Modal Logic
+    window.openModal = function(id, type) {
+        const data = type === 'album' ? allAlbums : allCinema;
+        const item = data.find(i => i.id == id);
+        if (!item) return; 
+        
+        const topId = getTopId(data);
+        const isTop = item.id === topId;
+        const isElite = parseFloat(item.score) >= 94;
+        const target = document.getElementById('modal-target');
+        
+        target.className = 'modal-content' + (isTop ? ' champion-modal' : (isElite ? ' elite-modal' : ''));
 
+        if (type === 'album') {
+            target.innerHTML = `
+                <div style="display:flex; gap:30px; flex-wrap:wrap;">
+                    <div style="position:relative;">
+                        <img src="${item.img}" style="width:300px; aspect-ratio:1/1; object-fit:cover; border:var(--border); box-shadow: 10px 10px 0 var(--black);">
+                        ${isTop ? '<div style="position:absolute; top:-15px; left:-15px; font-size:3rem;">👑</div>' : ''}
+                    </div>
+                    <div style="flex:1; min-width:300px;">
+                        <div style="display:flex; justify-content:space-between; align-items: flex-start;">
+                            <div>
+                                <h1 style="font-size:3rem; line-height:0.9; margin-bottom:5px;">${item.title}</h1>
+                                <h2 style="opacity:0.8; font-weight:700;">${item.artist}</h2>
+                            </div>
+                            <div class="score-box" style="background:${isTop ? 'white' : getScoreColor(item.score)}; color:${isTop ? '#2563eb' : 'white'}; font-size:1.8rem; padding:10px 15px;">
+                                ${item.score}
+                            </div>
+                        </div>
+                        <div style="background:${isTop ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.5)'}; padding:20px; border:var(--border); margin:25px 0; font-weight:600; line-height:1.6;">
+                            ${item.review || 'No review written yet.'}
+                        </div>
+                        <h3 style="border-bottom:var(--border); padding-bottom:5px; margin-bottom:15px; letter-spacing:2px; font-size:0.8rem;">TRACKLIST</h3>
+                        <div style="max-height: 250px; overflow-y: auto;">
+                            ${item.tracks ? item.tracks.map(t => `
+                                <div class="track-row">
+                                    <span style="font-weight:700;">${t.name}</span>
+                                    <span style="font-family:monospace; opacity:0.8;">${t.rating}</span>
+                                </div>
+                            `).join('') : '<p>No tracks added.</p>'}
+                        </div>
+                    </div>
+                </div>`;
+        } else {
+            target.innerHTML = `
+                <div style="display:flex; gap:30px; flex-wrap:wrap;">
+                    <div style="position:relative;">
+                        <img src="${item.poster || item.img}" style="width:300px; aspect-ratio:11/16; object-fit:cover; border:var(--border); box-shadow: 10px 10px 0 var(--black);">
+                        ${isTop ? '<div style="position:absolute; top:-15px; left:-15px; font-size:3rem;">👑</div>' : ''}
+                    </div>
+                    <div style="flex:1; min-width:300px;">
+                        <div style="display:flex; justify-content:space-between; align-items: flex-start;">
+                            <h1 style="font-size:3rem; line-height:0.9; margin-bottom:10px;">${item.title}</h1>
+                            <div class="score-box" style="background:${isTop ? 'white' : getScoreColor(item.score)}; color:${isTop ? '#2563eb' : 'white'}; font-size:1.8rem; padding:10px 15px;">
+                                ${item.score}
+                            </div>
+                        </div>
+                        <p style="margin-bottom:20px; font-weight:800; text-transform:uppercase; font-size:0.8rem; opacity:0.8;">CAST: ${item.cast || 'N/A'}</p>
+                        <div style="background:${isTop ? 'white' : 'var(--black)'}; color:${isTop ? '#1e40af' : 'white'}; padding:25px; border:var(--border);">
+                            <h3 style="font-size:0.7rem; letter-spacing:2px; margin-bottom:10px; opacity:0.7;">REVIEW SUMMARY</h3>
+                            <p style="font-style:italic; line-height:1.6; font-size:1.1rem;">"${item.review || 'No critique recorded.'}"</p>
+                        </div>
+                    </div>
+                </div>`;
+        }
+        document.getElementById('overlay').style.display = 'block';
+        document.body.style.overflow = 'hidden'; 
+    };
+
+    // Overlay click to close
+    document.getElementById('overlay').onclick = function(e) {
+        if (e.target.id === 'overlay') {
+            this.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    };
+
+    // --- ADMIN UI LOGIC ---
+
+    // Opens the drawer
+    window.toggleDrawer = (show) => {
+        document.getElementById('admin-drawer').style.display = show ? 'block' : 'none';
+        if(!show) resetAdmin();
+    };
+
+    // Step 1 -> Step 2
+    window.selectCategory = (cat) => {
+        window.currentCategory = cat;
+        document.getElementById('admin-step-1').style.display = 'none';
+        document.getElementById('admin-step-2').style.display = 'block';
+        document.getElementById('form-title').innerText = cat === 'album' ? 'NEW ALBUM ENTRY' : 'NEW CINEMA ENTRY';
+        
+        // Show/Hide tracklist field
+        document.getElementById('album-only-fields').style.display = cat === 'album' ? 'block' : 'none';
+    };
+
+    // Back button logic
+    window.resetAdmin = () => {
+        document.getElementById('admin-step-1').style.display = 'block';
+        document.getElementById('admin-step-2').style.display = 'none';
+        // Clear inputs
+        document.querySelectorAll('#admin-drawer input, #admin-drawer textarea').forEach(i => i.value = '');
+        document.getElementById('track-input-container').innerHTML = '';
+        document.getElementById('live-avg').innerText = '0';
+    };
+
+    // Tracklist logic for Albums
+    window.addTrackInput = () => {
+        const container = document.getElementById('track-input-container');
+        const div = document.createElement('div');
+        div.className = 'track-input-row';
+        div.innerHTML = `
+            <input type="text" placeholder="Track Name" style="flex:3;">
+            <input type="number" placeholder="0" class="track-score" style="flex:1;" oninput="calculateAvg()">
+        `;
+        container.appendChild(div);
+    };
+
+    window.calculateAvg = () => {
+        const scores = Array.from(document.querySelectorAll('.track-score'))
+                            .map(input => parseFloat(input.value))
+                            .filter(val => !isNaN(val));
+        if (scores.length > 0) {
+            const avg = (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1);
+            document.getElementById('live-avg').innerText = avg;
+            document.getElementById('entry-score').value = avg;
+        }
+    };
+
+    // Save Logic
+    document.getElementById('save-btn').onclick = () => {
+        const title = document.getElementById('entry-title').value;
+        const sub = document.getElementById('entry-sub').value;
+        const img = document.getElementById('entry-img').value;
+        const score = document.getElementById('entry-score').value;
+        const review = document.getElementById('entry-review').value;
+
+        if (!title || !score) return alert("Title and Score are required!");
+
+        const newEntry = {
+            id: Date.now().toString(),
+            title,
+            score,
+            review,
+            img: img || 'https://via.placeholder.com/300'
+        };
+
+        if (window.currentCategory === 'album') {
+            newEntry.artist = sub;
+            // Capture tracks
+            const trackRows = document.querySelectorAll('.track-input-row');
+            newEntry.tracks = Array.from(trackRows).map(row => ({
+                name: row.querySelectorAll('input')[0].value,
+                rating: row.querySelectorAll('input')[1].value
+            })).filter(t => t.name);
+            
+            localAlbums.push(newEntry);
+            localStorage.setItem('vault_albums', JSON.stringify(localAlbums));
+        } else {
+            newEntry.cast = sub;
+            newEntry.poster = img;
+            localCinema.push(newEntry);
+            localStorage.setItem('vault_cinema', JSON.stringify(localCinema));
+        }
+
+        location.reload(); // Refresh to show new data
+    };
+
+    // --- DELETE LOGIC ---
+    window.deleteEntry = (event, id, type) => {
+        event.stopPropagation();
+        if(!confirm("Erase this from the Vault?")) return;
+        if(type === 'album') {
+            localAlbums = localAlbums.filter(a => a.id !== id);
+            localStorage.setItem('vault_albums', JSON.stringify(localAlbums));
+        } else {
+            localCinema = localCinema.filter(c => c.id !== id);
+            localStorage.setItem('vault_cinema', JSON.stringify(localCinema));
+        }
+        location.reload();
+    };
+
+    // Event Listeners
     document.getElementById('open-admin').onclick = () => toggleDrawer(true);
-    document.getElementById('overlay').onclick = (e) => { if(e.target.id === 'overlay') e.target.style.display = 'none'; };
+    document.getElementById('close-admin').onclick = () => toggleDrawer(false);
 
+    // Initial load
     render();
+
 </script>
+
+
 </body>
 </html>
