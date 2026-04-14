@@ -379,28 +379,32 @@
         }).join('');
     }
 
-    function renderSpecificRankings(type) {
-        const containerId = type === 'album' ? 'album-rank-container' : 'series-rank-container';
-        const data = type === 'album' ? allAlbums : allCinema;
-        const topId = getTopId(data);
-        const sorted = [...data].sort((a, b) => parseFloat(b.score) - parseFloat(a.score));
-        
-        document.getElementById(containerId).innerHTML = sorted.map((item, index) => {
-            const isTop = item.id === topId;
-            const isElite = parseFloat(item.score) >= 94;
-            const specialClass = isTop ? 'champion-card' : (isElite ? 'elite-card' : '');
-            return `
-                <div class="rank-row ${specialClass}" onclick="openModal('${item.id}', '${type}')">
-                    <div class="rank-number">${isTop ? '👑' : '#' + (index + 1)}</div>
-                    <img src="${item.img || item.poster}" class="rank-img">
-                    <div class="rank-info">
-                        <h4>${item.title}</h4>
-                        <p>${item.artist || item.cast || ''}</p>
-                    </div>
-                    <div class="score-box" style="background:${isTop ? 'white' : getScoreColor(item.score)}; color:${isTop ? '#2563eb' : 'white'}">${item.score}</div>
-                </div>`;
-        }).join('');
-    }
+    // --- Updated Ranking Render (No Modal) ---
+function renderSpecificRankings(type) {
+    const containerId = type === 'album' ? 'album-rank-container' : 'series-rank-container';
+    const data = type === 'album' ? allAlbums : allCinema;
+    const topId = getTopId(data);
+    const sorted = [...data].sort((a, b) => parseFloat(b.score) - parseFloat(a.score));
+    
+    document.getElementById(containerId).innerHTML = sorted.map((item, index) => {
+        const isTop = item.id === topId;
+        const isElite = parseFloat(item.score) >= 94;
+        const specialClass = isTop ? 'champion-card' : (isElite ? 'elite-card' : '');
+
+        // REMOVED: onclick="openModal(...)" from the div below
+        return `
+            <div class="rank-row ${specialClass}">
+                <div class="rank-number">${isTop ? '👑' : '#' + (index + 1)}</div>
+                <img src="${item.img || item.poster}" class="rank-img">
+                <div class="rank-info">
+                    <h4 style="font-weight:900;">${item.title}</h4>
+                    <p>${item.artist || item.cast || ''}</p>
+                </div>
+                <div class="score-box" style="background:${isTop ? 'white' : getScoreColor(item.score)}; color:${isTop ? '#2563eb' : 'white'}">${item.score}</div>
+            </div>
+        `;
+    }).join('');
+}
 
     window.openModal = function(id, type) {
         const data = type === 'album' ? allAlbums : allCinema;
