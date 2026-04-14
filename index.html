@@ -96,6 +96,22 @@
 .elite-card:hover {
     animation: elite-glow 0.5s infinite alternate;
 }
+/* Apply Elite styling to Modals when active */
+.modal-content.elite-modal {
+    background-color: #fde047 !important;
+    background-image: radial-gradient(var(--black) 1px, transparent 0);
+    background-size: 20px 20px;
+    border: 6px solid var(--black) !important;
+}
+
+.elite-modal h1, .elite-modal h2, .elite-modal h3 {
+    color: var(--black);
+}
+
+/* Make the modal track rows look cleaner on yellow */
+.elite-modal .track-row {
+    border-bottom: 1px solid rgba(0,0,0,0.2);
+}
 
     </style>
     <link rel="manifest" href="manifest.json">
@@ -305,14 +321,12 @@
         render();
     };
 
-        function render() {
+            function render() {
+        // Render Albums
         document.getElementById('album-list').innerHTML = allAlbums.map(a => {
-            // Check if score is 94 or higher for Elite styling
             const isElite = parseFloat(a.score) >= 94;
-            const eliteClass = isElite ? 'elite-card' : '';
-
             return `
-                <div class="card album-card ${eliteClass}" data-id="${a.id}">
+                <div class="card album-card ${isElite ? 'elite-card' : ''}" data-id="${a.id}">
                     <div class="delete-btn" onclick="deleteEntry(event, '${a.id}', 'album')">X</div>
                     <span class="type-tag">ALBUM</span>
                     <img src="${a.img}">
@@ -327,21 +341,26 @@
             `;
         }).join('');
 
-        document.getElementById('series-list').innerHTML = allCinema.map(c => `
-            <div class="card series-card" data-id="${c.id}">
-                <div class="delete-btn" onclick="deleteEntry(event, '${c.id}', 'cinema')">X</div>
-                <span class="type-tag">CINEMA</span>
-                <img src="${c.poster || c.img}">
-                <div class="title-wrapper">
-                    <div class="scroll-text-container">
-                        <h3 class="item-title" style="font-weight:900;">${c.title}</h3>
-                        <p class="artist-name">${c.cast || ''}</p>
+        // Render Cinema
+        document.getElementById('series-list').innerHTML = allCinema.map(c => {
+            const isElite = parseFloat(c.score) >= 94;
+            return `
+                <div class="card series-card ${isElite ? 'elite-card' : ''}" data-id="${c.id}">
+                    <div class="delete-btn" onclick="deleteEntry(event, '${c.id}', 'cinema')">X</div>
+                    <span class="type-tag">CINEMA</span>
+                    <img src="${c.poster || c.img}">
+                    <div class="title-wrapper">
+                        <div class="scroll-text-container">
+                            <h3 class="item-title" style="font-weight:900;">${c.title}</h3>
+                            <p class="artist-name">${c.cast || ''}</p>
+                        </div>
+                        <div class="score-box" style="background:${getScoreColor(c.score)}">${c.score}</div>
                     </div>
-                    <div class="score-box" style="background:${getScoreColor(c.score)}">${c.score}</div>
                 </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
 
+        // Re-attach click events
         document.querySelectorAll('.card').forEach(card => {
             card.onclick = (e) => {
                 if(!e.target.classList.contains('delete-btn')) 
@@ -351,37 +370,46 @@
     }
 
 
-    function openModal(id, type) {
+        function openModal(id, type) {
         const item = type === 'album' ? allAlbums.find(a => a.id == id) : allCinema.find(c => c.id == id);
         if(!item) return;
+
         showLoader(() => {
             const target = document.getElementById('modal-target');
+            const isElite = parseFloat(item.score) >= 94;
+            
+            // Toggle Elite class on the modal container itself
+            target.className = 'modal-content' + (isElite ? ' elite-modal' : '');
+            
             if(type === 'album') {
                 target.innerHTML = `
                     <div style="display:flex; gap:30px; flex-wrap:wrap;">
-                        <img src="${item.img}" style="width:300px; aspect-ratio:1/1; object-fit:cover; border:var(--border);">
+                        <img src="${item.img}" style="width:300px; aspect-ratio:1/1; object-fit:cover; border:var(--border); box-shadow: 10px 10px 0 var(--black);">
                         <div style="flex:1; min-width:300px;">
-                            <div style="display:flex; justify-content:space-between;">
-                                <div><h1>${item.title}</h1><h2>${item.artist}</h2></div>
-                                <div style="background:black; color:white; padding:10px; font-weight:900;">${item.score}</div>
+                            <div style="display:flex; justify-content:space-between; align-items: flex-start;">
+                                <div><h1 style="font-size:3rem; line-height:0.9;">${item.title}</h1><h2 style="opacity:0.7;">${item.artist}</h2></div>
+                                <div class="score-box" style="background:${getScoreColor(item.score)}; font-size:1.5rem; padding:10px 15px;">${item.score}</div>
                             </div>
-                            <p style="background:#eee; padding:15px; border:var(--border); margin:20px 0;">${item.review || ''}</p>
-                            <h3 style="border-bottom:var(--border);">TRACKS</h3>
-                            ${item.tracks ? item.tracks.map(t => `<div class="track-row"><span>${t.name}</span><strong>${t.rating}</strong></div>`).join('') : ''}
+                            <p style="background:rgba(255,255,255,0.5); padding:15px; border:var(--border); margin:20px 0; font-weight:700;">${item.review || 'No review added.'}</p>
+                            <h3 style="border-bottom:var(--border); padding-bottom:5px; margin-bottom:10px;">TRACKLIST</h3>
+                            <div style="max-height: 250px; overflow-y: auto;">
+                                ${item.tracks ? item.tracks.map(t => `<div class="track-row"><span>${t.name}</span><strong>${t.rating}</strong></div>`).join('') : ''}
+                            </div>
                         </div>
                     </div>`;
             } else {
                 target.innerHTML = `
                     <div style="display:flex; gap:30px; flex-wrap:wrap;">
-                        <img src="${item.poster || item.img}" style="width:300px; aspect-ratio:11/16; object-fit:cover; border:var(--border);">
+                        <img src="${item.poster || item.img}" style="width:300px; aspect-ratio:11/16; object-fit:cover; border:var(--border); box-shadow: 10px 10px 0 var(--black);">
                         <div style="flex:1; min-width:300px;">
-                            <div style="display:flex; justify-content:space-between;">
-                                <h1>${item.title}</h1>
-                                <div style="background:${getScoreColor(item.score)}; color:white; padding:10px; border:var(--border);">${item.score}</div>
+                            <div style="display:flex; justify-content:space-between; align-items: flex-start;">
+                                <h1 style="font-size:3rem; line-height:0.9;">${item.title}</h1>
+                                <div class="score-box" style="background:${getScoreColor(item.score)}; font-size:1.5rem; padding:10px 15px;">${item.score}</div>
                             </div>
-                            <p><strong>CAST:</strong> ${item.cast || 'N/A'}</p>
-                            <div style="background:black; color:white; padding:20px; margin-top:20px;">
-                                <p style="font-style:italic;">"${item.review || ''}"</p>
+                            <p style="margin: 10px 0;"><strong>CAST:</strong> ${item.cast || 'N/A'}</p>
+                            <div style="background:var(--black); color:white; padding:25px; margin-top:20px; border:var(--border);">
+                                <h3 style="color:white; font-size:0.7rem; letter-spacing:2px; margin-bottom:10px; opacity:0.6;">REVIEW SUMMARY</h3>
+                                <p style="font-style:italic; line-height:1.6;">"${item.review || 'No critique recorded.'}"</p>
                             </div>
                         </div>
                     </div>`;
@@ -389,6 +417,7 @@
             document.getElementById('overlay').style.display = 'block';
         });
     }
+
 
     document.getElementById('open-admin').onclick = () => toggleDrawer(true);
     document.getElementById('overlay').onclick = (e) => { if(e.target.id === 'overlay') e.target.style.display = 'none'; };
