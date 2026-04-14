@@ -305,7 +305,6 @@
 </div>
 
 <script type="module">
-    // 1. Initial Data and State
     import { albums as initialAlbums, cinema as initialCinema } from './data.js';
 
     let localAlbums = JSON.parse(localStorage.getItem('vault_albums')) || [];
@@ -313,7 +312,6 @@
     let allAlbums = [...initialAlbums, ...localAlbums];
     let allCinema = [...initialCinema, ...localCinema];
 
-    // 2. Helper Functions
     const getTopId = (data) => {
         if (!data.length) return null;
         return [...data].sort((a, b) => parseFloat(b.score) - parseFloat(a.score))[0].id;
@@ -321,35 +319,31 @@
 
     function getScoreColor(scoreStr) {
         const s = parseFloat(scoreStr);
-        if (s >= 90) return "#22c55e"; // Green
-        if (s >= 70) return "#eab308"; // Yellow
-        return "#ef4444"; // Red
+        if (s >= 90) return "#22c55e";
+        if (s >= 70) return "#eab308";
+        return "#ef4444";
     }
 
-    // 3. Page Switching Logic
     window.showPage = function(pageId) {
         document.querySelectorAll('.page-view').forEach(p => p.style.display = 'none');
         document.getElementById('page-' + pageId).style.display = 'block';
-        
         document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-        document.getElementById('nav-' + pageId).classList.add('active');
+        const activeBtn = document.getElementById('nav-' + pageId);
+        if(activeBtn) activeBtn.classList.add('active');
 
         if (pageId === 'home') render();
         if (pageId === 'rank-albums') renderSpecificRankings('album');
         if (pageId === 'rank-series') renderSpecificRankings('cinema');
     };
 
-    // 4. Main Render (The Vault Home)
     function render() {
         const topAlbumId = getTopId(allAlbums);
         const topCinemaId = getTopId(allCinema);
 
-        // Render Albums
         document.getElementById('album-list').innerHTML = allAlbums.map(a => {
             const isTop = a.id === topAlbumId;
             const isElite = parseFloat(a.score) >= 94;
             const cardClass = isTop ? 'champion-card' : (isElite ? 'elite-card' : '');
-
             return `
                 <div class="card album-card ${cardClass}" onclick="openModal('${a.id}', 'album')">
                     <div class="delete-btn" onclick="deleteEntry(event, '${a.id}', 'album')">X</div>
@@ -357,21 +351,18 @@
                     <img src="${a.img}">
                     <div class="title-wrapper">
                         <div class="scroll-text-container">
-                            <h3 class="item-title" style="font-weight:900;">${a.title}</h3>
+                            <h3 class="item-title">${a.title}</h3>
                             <p class="artist-name">${a.artist}</p>
                         </div>
                         <div class="score-box" style="background:${isTop ? 'white' : getScoreColor(a.score)}; color:${isTop ? '#2563eb' : 'white'}">${a.score}</div>
                     </div>
-                </div>
-            `;
+                </div>`;
         }).join('');
 
-        // Render Cinema
         document.getElementById('series-list').innerHTML = allCinema.map(c => {
             const isTop = c.id === topCinemaId;
             const isElite = parseFloat(c.score) >= 94;
             const cardClass = isTop ? 'champion-card' : (isElite ? 'elite-card' : '');
-
             return `
                 <div class="card series-card ${cardClass}" onclick="openModal('${c.id}', 'cinema')">
                     <div class="delete-btn" onclick="deleteEntry(event, '${c.id}', 'cinema')">X</div>
@@ -379,17 +370,15 @@
                     <img src="${c.poster || c.img}">
                     <div class="title-wrapper">
                         <div class="scroll-text-container">
-                            <h3 class="item-title" style="font-weight:900;">${c.title}</h3>
+                            <h3 class="item-title">${c.title}</h3>
                             <p class="artist-name">${c.cast || ''}</p>
                         </div>
                         <div class="score-box" style="background:${isTop ? 'white' : getScoreColor(c.score)}; color:${isTop ? '#2563eb' : 'white'}">${c.score}</div>
                     </div>
-                </div>
-            `;
+                </div>`;
         }).join('');
     }
 
-    // 5. Ranking Render
     function renderSpecificRankings(type) {
         const containerId = type === 'album' ? 'album-rank-container' : 'series-rank-container';
         const data = type === 'album' ? allAlbums : allCinema;
@@ -400,22 +389,19 @@
             const isTop = item.id === topId;
             const isElite = parseFloat(item.score) >= 94;
             const specialClass = isTop ? 'champion-card' : (isElite ? 'elite-card' : '');
-
             return `
                 <div class="rank-row ${specialClass}" onclick="openModal('${item.id}', '${type}')">
                     <div class="rank-number">${isTop ? '👑' : '#' + (index + 1)}</div>
                     <img src="${item.img || item.poster}" class="rank-img">
                     <div class="rank-info">
-                        <h4 style="font-weight:900;">${item.title}</h4>
+                        <h4>${item.title}</h4>
                         <p>${item.artist || item.cast || ''}</p>
                     </div>
                     <div class="score-box" style="background:${isTop ? 'white' : getScoreColor(item.score)}; color:${isTop ? '#2563eb' : 'white'}">${item.score}</div>
-                </div>
-            `;
+                </div>`;
         }).join('');
     }
 
-    // 6. Modal Logic
     window.openModal = function(id, type) {
         const data = type === 'album' ? allAlbums : allCinema;
         const item = data.find(i => i.id == id);
@@ -427,15 +413,16 @@
         const target = document.getElementById('modal-target');
         
         target.className = 'modal-content' + (isTop ? ' champion-modal' : (isElite ? ' elite-modal' : ''));
+        document.getElementById('overlay').scrollTop = 0;
 
         if (type === 'album') {
             target.innerHTML = `
                 <div style="display:flex; gap:30px; flex-wrap:wrap;">
-                    <div style="position:relative;">
+                    <div style="position:relative; z-index:5;">
                         <img src="${item.img}" style="width:300px; aspect-ratio:1/1; object-fit:cover; border:var(--border); box-shadow: 10px 10px 0 var(--black);">
                         ${isTop ? '<div style="position:absolute; top:-15px; left:-15px; font-size:3rem;">👑</div>' : ''}
                     </div>
-                    <div style="flex:1; min-width:300px;">
+                    <div style="flex:1; min-width:300px; z-index:5;">
                         <div style="display:flex; justify-content:space-between; align-items: flex-start;">
                             <div>
                                 <h1 style="font-size:3rem; line-height:0.9; margin-bottom:5px;">${item.title}</h1>
@@ -445,28 +432,27 @@
                                 ${item.score}
                             </div>
                         </div>
-                        <div style="background:${isTop ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.5)'}; padding:20px; border:var(--border); margin:25px 0; font-weight:600; line-height:1.6;">
+                        <div style="background:${isTop ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.5)'}; padding:20px; border:var(--border); margin:25px 0; font-weight:600; line-height:1.6; color:${isTop ? 'white' : 'black'};">
                             ${item.review || 'No review written yet.'}
                         </div>
                         <h3 style="border-bottom:var(--border); padding-bottom:5px; margin-bottom:15px; letter-spacing:2px; font-size:0.8rem;">TRACKLIST</h3>
                         <div style="max-height: 250px; overflow-y: auto;">
                             ${item.tracks ? item.tracks.map(t => `
-                                <div class="track-row">
+                                <div class="track-row" style="border-color:${isTop ? 'rgba(255,255,255,0.2)' : '#ddd'}">
                                     <span style="font-weight:700;">${t.name}</span>
                                     <span style="font-family:monospace; opacity:0.8;">${t.rating}</span>
-                                </div>
-                            `).join('') : '<p>No tracks added.</p>'}
+                                </div>`).join('') : '<p>No tracks added.</p>'}
                         </div>
                     </div>
                 </div>`;
         } else {
             target.innerHTML = `
                 <div style="display:flex; gap:30px; flex-wrap:wrap;">
-                    <div style="position:relative;">
+                    <div style="position:relative; z-index:5;">
                         <img src="${item.poster || item.img}" style="width:300px; aspect-ratio:11/16; object-fit:cover; border:var(--border); box-shadow: 10px 10px 0 var(--black);">
                         ${isTop ? '<div style="position:absolute; top:-15px; left:-15px; font-size:3rem;">👑</div>' : ''}
                     </div>
-                    <div style="flex:1; min-width:300px;">
+                    <div style="flex:1; min-width:300px; z-index:5;">
                         <div style="display:flex; justify-content:space-between; align-items: flex-start;">
                             <h1 style="font-size:3rem; line-height:0.9; margin-bottom:10px;">${item.title}</h1>
                             <div class="score-box" style="background:${isTop ? 'white' : getScoreColor(item.score)}; color:${isTop ? '#2563eb' : 'white'}; font-size:1.8rem; padding:10px 15px;">
@@ -485,59 +471,43 @@
         document.body.style.overflow = 'hidden'; 
     };
 
-    // Overlay click to close
-    document.getElementById('overlay').onclick = function(e) {
+    document.getElementById('overlay').onclick = (e) => {
         if (e.target.id === 'overlay') {
-            this.style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
             document.body.style.overflow = 'auto';
         }
     };
 
-    // --- ADMIN UI LOGIC ---
-
-    // Opens the drawer
     window.toggleDrawer = (show) => {
         document.getElementById('admin-drawer').style.display = show ? 'block' : 'none';
         if(!show) resetAdmin();
     };
 
-    // Step 1 -> Step 2
     window.selectCategory = (cat) => {
         window.currentCategory = cat;
         document.getElementById('admin-step-1').style.display = 'none';
         document.getElementById('admin-step-2').style.display = 'block';
-        document.getElementById('form-title').innerText = cat === 'album' ? 'NEW ALBUM ENTRY' : 'NEW CINEMA ENTRY';
-        
-        // Show/Hide tracklist field
+        document.getElementById('form-title').innerText = cat === 'album' ? 'NEW ALBUM' : 'NEW CINEMA';
         document.getElementById('album-only-fields').style.display = cat === 'album' ? 'block' : 'none';
     };
 
-    // Back button logic
     window.resetAdmin = () => {
         document.getElementById('admin-step-1').style.display = 'block';
         document.getElementById('admin-step-2').style.display = 'none';
-        // Clear inputs
         document.querySelectorAll('#admin-drawer input, #admin-drawer textarea').forEach(i => i.value = '');
         document.getElementById('track-input-container').innerHTML = '';
         document.getElementById('live-avg').innerText = '0';
     };
 
-    // Tracklist logic for Albums
     window.addTrackInput = () => {
-        const container = document.getElementById('track-input-container');
         const div = document.createElement('div');
         div.className = 'track-input-row';
-        div.innerHTML = `
-            <input type="text" placeholder="Track Name" style="flex:3;">
-            <input type="number" placeholder="0" class="track-score" style="flex:1;" oninput="calculateAvg()">
-        `;
-        container.appendChild(div);
+        div.innerHTML = `<input type="text" placeholder="Track Name" style="flex:3;"><input type="number" placeholder="0" class="track-score" style="flex:1;" oninput="calculateAvg()">`;
+        document.getElementById('track-input-container').appendChild(div);
     };
 
     window.calculateAvg = () => {
-        const scores = Array.from(document.querySelectorAll('.track-score'))
-                            .map(input => parseFloat(input.value))
-                            .filter(val => !isNaN(val));
+        const scores = Array.from(document.querySelectorAll('.track-score')).map(i => parseFloat(i.value)).filter(v => !isNaN(v));
         if (scores.length > 0) {
             const avg = (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1);
             document.getElementById('live-avg').innerText = avg;
@@ -545,49 +515,38 @@
         }
     };
 
-    // Save Logic
     document.getElementById('save-btn').onclick = () => {
         const title = document.getElementById('entry-title').value;
-        const sub = document.getElementById('entry-sub').value;
-        const img = document.getElementById('entry-img').value;
         const score = document.getElementById('entry-score').value;
-        const review = document.getElementById('entry-review').value;
-
-        if (!title || !score) return alert("Title and Score are required!");
+        if (!title || !score) return alert("Required: Title & Score");
 
         const newEntry = {
             id: Date.now().toString(),
-            title,
-            score,
-            review,
-            img: img || 'https://via.placeholder.com/300'
+            title, score,
+            review: document.getElementById('entry-review').value,
+            img: document.getElementById('entry-img').value || 'https://via.placeholder.com/300'
         };
 
         if (window.currentCategory === 'album') {
-            newEntry.artist = sub;
-            // Capture tracks
-            const trackRows = document.querySelectorAll('.track-input-row');
-            newEntry.tracks = Array.from(trackRows).map(row => ({
+            newEntry.artist = document.getElementById('entry-sub').value;
+            newEntry.tracks = Array.from(document.querySelectorAll('.track-input-row')).map(row => ({
                 name: row.querySelectorAll('input')[0].value,
                 rating: row.querySelectorAll('input')[1].value
             })).filter(t => t.name);
-            
             localAlbums.push(newEntry);
             localStorage.setItem('vault_albums', JSON.stringify(localAlbums));
         } else {
-            newEntry.cast = sub;
-            newEntry.poster = img;
+            newEntry.cast = document.getElementById('entry-sub').value;
+            newEntry.poster = newEntry.img;
             localCinema.push(newEntry);
             localStorage.setItem('vault_cinema', JSON.stringify(localCinema));
         }
-
-        location.reload(); // Refresh to show new data
+        location.reload();
     };
 
-    // --- DELETE LOGIC ---
     window.deleteEntry = (event, id, type) => {
         event.stopPropagation();
-        if(!confirm("Erase this from the Vault?")) return;
+        if(!confirm("Erase entry?")) return;
         if(type === 'album') {
             localAlbums = localAlbums.filter(a => a.id !== id);
             localStorage.setItem('vault_albums', JSON.stringify(localAlbums));
@@ -598,14 +557,10 @@
         location.reload();
     };
 
-    // Event Listeners
     document.getElementById('open-admin').onclick = () => toggleDrawer(true);
-    document.getElementById('close-admin').onclick = () => toggleDrawer(false);
-
-    // Initial load
     render();
-
 </script>
+
 
 
 </body>
