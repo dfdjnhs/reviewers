@@ -273,16 +273,18 @@
 .timer-tag { 
     position: absolute; 
     bottom: 45px; 
-    left: 12px; 
+    left: 10px; /* Shifted slightly */
     background: #2563eb; 
     color: white; 
-    font-size: 10px; 
-    padding: 2px 6px; 
+    font-size: 9px; /* Slightly smaller font to fit the extra "D" */
+    padding: 3px 6px; 
     font-weight: 900; 
     border: 2px solid var(--black); 
     z-index: 20; 
     box-shadow: 3px 3px 0 var(--black);
+    white-space: nowrap; /* Prevents text from wrapping to two lines */
 }
+
 
 /* Status Selectors in Admin */
 .status-nav { display: flex; gap: 10px; margin-bottom: 15px; }
@@ -434,13 +436,27 @@
     }
 
     function getRemainingTime(targetDate) {
-        const diff = new Date(targetDate).getTime() - new Date().getTime();
-        if (diff <= 0) return "RELEASING...";
-        const hours = Math.floor(diff / (1000 * 60 * 60));
-        const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const secs = Math.floor((diff % (1000 * 60)) / 1000);
-        return `${hours}H ${mins}M ${secs}S`;
-    }
+    const diff = new Date(targetDate).getTime() - new Date().getTime();
+    
+    // If the time has passed
+    if (diff <= 0) return "RELEASING...";
+
+    // Calculate time units
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const secs = Math.floor((diff % (1000 * 60)) / 1000);
+
+    // Format with leading zeros for a cleaner look
+    const d = String(days).padStart(2, '0');
+    const h = String(hours).padStart(2, '0');
+    const m = String(mins).padStart(2, '0');
+    const s = String(secs).padStart(2, '0');
+
+    // Return the new format
+    return `${d}D ${h}H ${m}M ${s}S`;
+}
+
 
     // 3. Navigation
     window.showPage = function(pageId) {
