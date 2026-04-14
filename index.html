@@ -272,7 +272,7 @@
 
 .timer-tag { 
     position: absolute; 
-    bottom: 256px; 
+    bottom: 45px; 
     left: 12px; 
     background: #2563eb; 
     color: white; 
@@ -291,43 +291,6 @@
     padding: 10px; font-weight: 900; cursor: pointer; opacity: 0.5; 
 }
 .status-btn.active { opacity: 1; border: 2px solid #22c55e; color: #22c55e; }
-/* Container for the title */
-.scroll-text-container {
-    overflow: hidden;
-    white-space: nowrap;
-    width: 100%;
-    position: relative;
-    mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
-}
-
-/* The actual title text */
-.item-title {
-    display: inline-block;
-    padding-left: 0%;
-    animation: slide-text 10s linear infinite;
-    font-size: 0.9rem;
-    font-weight: 900;
-}
-
-/* The animation logic */
-@keyframes slide-text {
-    0% { transform: translateX(0); }
-    10% { transform: translateX(0); } /* Pause at start */
-    45% { transform: translateX(-60%); } /* Slide left */
-    55% { transform: translateX(-60%); } /* Pause at end */
-    90% { transform: translateX(0); } /* Return */
-    100% { transform: translateX(0); }
-}
-
-/* Reset Artist name to be static and clean */
-.artist-name {
-    font-size: 0.75rem;
-    font-weight: 700;
-    opacity: 0.6;
-    display: block;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
 
     </style>
     <link rel="manifest" href="manifest.json">
@@ -445,17 +408,19 @@
 <script type="module">
     import { albums as initialAlbums, cinema as initialCinema } from './data.js';
 
-    // 1. Setup Data
+    // 1. Initialize Data
     let localAlbums = JSON.parse(localStorage.getItem('vault_albums')) || [];
     let localCinema = JSON.parse(localStorage.getItem('vault_cinema')) || [];
     let localUpcoming = JSON.parse(localStorage.getItem('vault_upcoming')) || [];
     
+    // Combine for global use
     let allAlbums = [...initialAlbums, ...localAlbums];
     let allCinema = [...initialCinema, ...localCinema];
 
     window.currentCategory = 'album';
     window.currentStatus = 'reviewed';
 
+    // 2. Utility Functions
     const getTopId = (data) => {
         if (!data || !data.length) return null;
         return [...data].sort((a, b) => parseFloat(b.score) - parseFloat(a.score))[0].id;
@@ -477,8 +442,54 @@
         return `${hours}H ${mins}M ${secs}S`;
     }
 
-    // 2. Main Render Function
-    window.render = function() {
+    // 3. Navigation
+    window.showPage = function(pageId) {
+        document.querySelectorAll('.page-view').forEach(p => p.style.display = 'none');
+        document.getElementById('page-' + pageId).style.display = 'block';
+        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+        if(document.getElementById('nav-' + pageId)) document.getElementById('nav-' + pageId).classList.add('active');
+
+        if (pageId === 'home') render();
+        if (pageId === 'rank-albums') renderSpecificRankings('album');
+        if (pageId === 'rank-series') renderSpecificRankings('cinema');
+    };
+
+    // 4. Timer Logic
+    function checkExpiringTimers() {
+    let changed = false;
+    const now = new Date().getTime();
+
+    localUpcoming = localUpcoming.filter(item => {
+        if (item.releaseDate && new Date(item.releaseDate).getTime() <= now) {
+            // Ensure data maps correctly during promotion
+            if (item.type === 'ALBUM') {
+                // Critical: Ensure sub-info maps to 'artist'
+                item.artist = item.artist || item.subText || "Unknown Artist";
+                localAlbums.push(item);
+            } else {
+                item.cast = item.cast || item.subText || "N/A";
+                localCinema.push(item);
+            }
+            changed = true;
+            return false;
+        }
+        return true;
+    });
+
+    if (changed) {
+        localStorage.setItem('vault_albums', JSON.stringify(localAlbums));
+        localStorage.setItem('vault_cinema', JSON.stringify(localCinema));
+        localStorage.setItem('vault_upcoming', JSON.stringify(localUpcoming));
+        location.reload();
+    }
+}
+
+
+    // 5. Main Render
+    function render() {
+        checkExpiringTimers();
+        
+        // Refresh combined lists
         allAlbums = [...initialAlbums, ...localAlbums];
         allCinema = [...initialCinema, ...localCinema];
 
@@ -490,16 +501,12 @@
         if (localUpcoming.length > 0) {
             document.getElementById('upcoming-section').style.display = 'block';
             upcomingList.innerHTML = localUpcoming.map(u => `
-                <div class="card upcoming-card" style="width:200px; position:relative;">
+                <div class="card upcoming-card" style="width:180px;">
                     <div class="delete-btn" onclick="deleteEntry(event, '${u.id}', 'upcoming')">X</div>
-                    <div class="timer-tag" style="position:absolute; top:10px; left:10px; z-index:100;">${getRemainingTime(u.releaseDate)}</div>
+                    <div class="timer-tag">${getRemainingTime(u.releaseDate)}</div>
                     <span class="type-tag">${u.type}</span>
                     <img src="${u.img}">
-                    <div class="title-wrapper">
-                         <div style="flex: 1; overflow: hidden;">
-                            <div class="scroll-text-container"><h3 class="item-title">${u.title}</h3></div>
-                        </div>
-                    </div>
+                    <div class="title-wrapper"><h3>${u.title}</h3></div>
                 </div>`).join('');
         } else {
             document.getElementById('upcoming-section').style.display = 'none';
@@ -516,8 +523,8 @@
                     <span class="type-tag">${isTop ? '🏆 NO. 1' : 'ALBUM'}</span>
                     <img src="${a.img}">
                     <div class="title-wrapper">
-                        <div style="flex: 1; overflow: hidden;">
-                            <div class="scroll-text-container"><h3 class="item-title">${a.title}</h3></div>
+                        <div class="scroll-text-container">
+                            <h3 class="item-title">${a.title}</h3>
                             <p class="artist-name">${a.artist || ''}</p>
                         </div>
                         <div class="score-box" style="background:${isTop ? 'white' : getScoreColor(a.score)}; color:${isTop ? '#2563eb' : 'white'}">${a.score}</div>
@@ -536,57 +543,241 @@
                     <span class="type-tag">${isTop ? '🏆 NO. 1' : 'CINEMA'}</span>
                     <img src="${c.poster || c.img}">
                     <div class="title-wrapper">
-                        <div style="flex: 1; overflow: hidden;">
-                            <div class="scroll-text-container"><h3 class="item-title">${c.title}</h3></div>
+                        <div class="scroll-text-container">
+                            <h3 class="item-title">${c.title}</h3>
                             <p class="artist-name">${c.cast || ''}</p>
                         </div>
                         <div class="score-box" style="background:${isTop ? 'white' : getScoreColor(c.score)}; color:${isTop ? '#2563eb' : 'white'}">${c.score}</div>
                     </div>
                 </div>`;
         }).join('');
-    };
+    }
 
-    // 3. Essential Actions
-    window.showPage = (pageId) => {
-        document.querySelectorAll('.page-view').forEach(p => p.style.display = 'none');
-        document.getElementById('page-' + pageId).style.display = 'block';
-        if (pageId === 'home') render();
-    };
+    // 6. Ranking Page Render
+    window.renderSpecificRankings = function(type) {
+        const containerId = type === 'album' ? 'album-rank-container' : 'series-rank-container';
+        const data = type === 'album' ? allAlbums : allCinema;
+        const topId = getTopId(data);
+        const sorted = [...data].sort((a, b) => parseFloat(b.score) - parseFloat(a.score));
+        
+        document.getElementById(containerId).innerHTML = sorted.map((item, index) => {
+            const isTop = item.id === topId;
+            const isElite = parseFloat(item.score) >= 94;
+            const specialClass = isTop ? 'champion-card' : (isElite ? 'elite-card' : '');
 
-    window.openModal = (id, type) => {
+            return `
+                <div class="rank-row ${specialClass}">
+                    <div class="rank-number">${isTop ? '👑' : '#' + (index + 1)}</div>
+                    <img src="${item.img || item.poster}" class="rank-img">
+                    <div class="rank-info">
+                        <h4 style="font-weight:900;">${item.title}</h4>
+                        <p>${item.artist || item.cast || ''}</p>
+                    </div>
+                    <div class="score-box" style="background:${isTop ? 'white' : getScoreColor(item.score)}; color:${isTop ? '#2563eb' : 'white'}">${item.score}</div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // 7. Modals
+    window.openModal = function(id, type) {
         const data = type === 'album' ? allAlbums : allCinema;
         const item = data.find(i => i.id == id);
-        if (!item) return;
+        if (!item) return; 
         
-        const target = document.getElementById('modal-target');
-        const isTop = item.id === getTopId(data);
+        const topId = getTopId(data);
+        const isTop = item.id === topId;
         const isElite = parseFloat(item.score) >= 94;
+        const target = document.getElementById('modal-target');
         
         target.className = 'modal-content' + (isTop ? ' champion-modal' : (isElite ? ' elite-modal' : ''));
-        target.innerHTML = `<h1 style="font-size:2.5rem;">${item.title}</h1><p>${item.review || ''}</p>`;
-        
-        document.getElementById('overlay').style.display = 'flex';
-        document.body.style.overflow = 'hidden';
+        document.getElementById('overlay').scrollTop = 0;
+
+        if (type === 'album') {
+            target.innerHTML = `
+                <div style="display:flex; gap:30px; flex-wrap:wrap;">
+                    <div style="position:relative; z-index:5;">
+                        <img src="${item.img}" style="width:300px; aspect-ratio:1/1; object-fit:cover; border:var(--border); box-shadow: 10px 10px 0 var(--black);">
+                        ${isTop ? '<div style="position:absolute; top:-15px; left:-15px; font-size:3rem;">👑</div>' : ''}
+                    </div>
+                    <div style="flex:1; min-width:300px; z-index:5;">
+                        <div style="display:flex; justify-content:space-between; align-items: flex-start;">
+                            <div>
+                                <h1 style="font-size:3rem; line-height:0.9; margin-bottom:5px;">${item.title}</h1>
+                                <h2 style="opacity:0.8; font-weight:700;">${item.artist}</h2>
+                            </div>
+                            <div class="score-box" style="background:${isTop ? 'white' : getScoreColor(item.score)}; color:${isTop ? '#2563eb' : 'white'}; font-size:1.8rem; padding:10px 15px;">
+                                ${item.score}
+                            </div>
+                        </div>
+                        <div style="background:${isTop ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.5)'}; padding:20px; border:var(--border); margin:25px 0; font-weight:600; line-height:1.6; color:${isTop ? 'white' : 'black'};">
+                            ${item.review || 'No review written yet.'}
+                        </div>
+                        <h3 style="border-bottom:var(--border); padding-bottom:5px; margin-bottom:15px; letter-spacing:2px; font-size:0.8rem;">TRACKLIST</h3>
+                        <div style="max-height: 250px; overflow-y: auto;">
+                            ${item.tracks ? item.tracks.map(t => `
+                                <div class="track-row" style="border-color:${isTop ? 'rgba(255,255,255,0.2)' : '#ddd'}">
+                                    <span style="font-weight:700;">${t.name}</span>
+                                    <span style="font-family:monospace; opacity:0.8;">${t.rating}</span>
+                                </div>`).join('') : '<p>No tracks added.</p>'}
+                        </div>
+                    </div>
+                </div>`;
+        } else {
+            target.innerHTML = `
+                <div style="display:flex; gap:30px; flex-wrap:wrap;">
+                    <div style="position:relative; z-index:5;">
+                        <img src="${item.poster || item.img}" style="width:300px; aspect-ratio:11/16; object-fit:cover; border:var(--border); box-shadow: 10px 10px 0 var(--black);">
+                        ${isTop ? '<div style="position:absolute; top:-15px; left:-15px; font-size:3rem;">👑</div>' : ''}
+                    </div>
+                    <div style="flex:1; min-width:300px; z-index:5;">
+                        <div style="display:flex; justify-content:space-between; align-items: flex-start;">
+                            <h1 style="font-size:3rem; line-height:0.9; margin-bottom:10px;">${item.title}</h1>
+                            <div class="score-box" style="background:${isTop ? 'white' : getScoreColor(item.score)}; color:${isTop ? '#2563eb' : 'white'}; font-size:1.8rem; padding:10px 15px;">
+                                ${item.score}
+                            </div>
+                        </div>
+                        <p style="margin-bottom:20px; font-weight:800; text-transform:uppercase; font-size:0.8rem; opacity:0.8;">CAST: ${item.cast || 'N/A'}</p>
+                        <div style="background:${isTop ? 'white' : 'var(--black)'}; color:${isTop ? '#1e40af' : 'white'}; padding:25px; border:var(--border);">
+                            <h3 style="font-size:0.7rem; letter-spacing:2px; margin-bottom:10px; opacity:0.7;">REVIEW SUMMARY</h3>
+                            <p style="font-style:italic; line-height:1.6; font-size:1.1rem;">"${item.review || 'No critique recorded.'}"</p>
+                        </div>
+                    </div>
+                </div>`;
+        }
+        document.getElementById('overlay').style.display = 'block';
+        document.body.style.overflow = 'hidden'; 
     };
+
+    document.getElementById('overlay').onclick = (e) => {
+        if (e.target.id === 'overlay') {
+            document.getElementById('overlay').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    };
+
+    // 8. Admin Drawer & Logic
+    window.toggleDrawer = (show) => {
+        document.getElementById('admin-drawer').style.display = show ? 'block' : 'none';
+        if(!show) resetAdmin();
+    };
+
+    window.selectCategory = (cat) => {
+        window.currentCategory = cat;
+        document.getElementById('admin-step-1').style.display = 'none';
+        document.getElementById('admin-step-2').style.display = 'block';
+        document.getElementById('form-title').innerText = cat === 'album' ? 'NEW ALBUM' : 'NEW CINEMA';
+        document.getElementById('album-only-fields').style.display = cat === 'album' ? 'block' : 'none';
+    };
+
+    window.setEntryStatus = (status) => {
+        window.currentStatus = status;
+        document.getElementById('stat-reviewed').classList.toggle('active', status === 'reviewed');
+        document.getElementById('stat-upcoming').classList.toggle('active', status === 'upcoming');
+        document.getElementById('timer-field').style.display = status === 'upcoming' ? 'block' : 'none';
+        document.getElementById('entry-score').style.display = status === 'upcoming' ? 'none' : 'block';
+    };
+
+    window.resetAdmin = () => {
+        document.getElementById('admin-step-1').style.display = 'block';
+        document.getElementById('admin-step-2').style.display = 'none';
+        document.querySelectorAll('#admin-drawer input, #admin-drawer textarea').forEach(i => i.value = '');
+        document.getElementById('track-input-container').innerHTML = '';
+        document.getElementById('live-avg').innerText = '0';
+        window.setEntryStatus('reviewed');
+    };
+
+    window.addTrackInput = () => {
+        const div = document.createElement('div');
+        div.className = 'track-input-row';
+        div.innerHTML = `<input type="text" placeholder="Track Name" style="flex:3;"><input type="number" placeholder="0" class="track-score" style="flex:1;" oninput="calculateAvg()">`;
+        document.getElementById('track-input-container').appendChild(div);
+    };
+
+    window.calculateAvg = () => {
+        const scores = Array.from(document.querySelectorAll('.track-score')).map(i => parseFloat(i.value)).filter(v => !isNaN(v));
+        if (scores.length > 0) {
+            const avg = (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1);
+            document.getElementById('live-avg').innerText = avg;
+            document.getElementById('entry-score').value = avg;
+        }
+    };
+
+    document.getElementById('save-btn').onclick = () => {
+    const title = document.getElementById('entry-title').value;
+    const subText = document.getElementById('entry-sub').value; // Artist or Cast
+    const score = document.getElementById('entry-score').value || 0;
+    
+    if (!title) return alert("Title required");
+
+    const newEntry = {
+        id: Date.now().toString(),
+        title: title,
+        img: document.getElementById('entry-img').value || 'https://via.placeholder.com/300',
+        review: document.getElementById('entry-review').value || "No review written yet.",
+        score: score,
+        releaseDate: document.getElementById('release-date').value,
+        type: window.currentCategory.toUpperCase(),
+        // Capture tracks if they exist
+        tracks: Array.from(document.querySelectorAll('.track-input-row')).map(row => ({
+            name: row.querySelectorAll('input')[0].value,
+            rating: row.querySelectorAll('input')[1].value
+        })).filter(t => t.name)
+    };
+
+    // Label the sub-text based on category
+    if (window.currentCategory === 'album') {
+        newEntry.artist = subText;
+    } else {
+        newEntry.cast = subText;
+        newEntry.poster = newEntry.img;
+    }
+
+    if (window.currentStatus === 'upcoming') {
+        localUpcoming.push(newEntry);
+        localStorage.setItem('vault_upcoming', JSON.stringify(localUpcoming));
+    } else {
+        if (window.currentCategory === 'album') {
+            localAlbums.push(newEntry);
+            localStorage.setItem('vault_albums', JSON.stringify(localAlbums));
+        } else {
+            localCinema.push(newEntry);
+            localStorage.setItem('vault_cinema', JSON.stringify(localCinema));
+        }
+    }
+    location.reload();
+};
+
 
     window.deleteEntry = (event, id, type) => {
         event.stopPropagation();
-        if(!confirm("Erase?")) return;
-        if(type === 'album') localAlbums = localAlbums.filter(a => a.id !== id);
-        if(type === 'cinema') localCinema = localCinema.filter(c => c.id !== id);
-        if(type === 'upcoming') localUpcoming = localUpcoming.filter(u => u.id !== id);
-        
-        localStorage.setItem('vault_albums', JSON.stringify(localAlbums));
-        localStorage.setItem('vault_cinema', JSON.stringify(localCinema));
-        localStorage.setItem('vault_upcoming', JSON.stringify(localUpcoming));
-        render();
+        if(!confirm("Erase entry?")) return;
+        if(type === 'album') {
+            localAlbums = localAlbums.filter(a => a.id !== id);
+            localStorage.setItem('vault_albums', JSON.stringify(localAlbums));
+        } else if (type === 'cinema') {
+            localCinema = localCinema.filter(c => c.id !== id);
+            localStorage.setItem('vault_cinema', JSON.stringify(localCinema));
+        } else {
+            localUpcoming = localUpcoming.filter(u => u.id !== id);
+            localStorage.setItem('vault_upcoming', JSON.stringify(localUpcoming));
+        }
+        location.reload();
     };
 
-    // Initialize
-    document.getElementById('open-admin').onclick = () => document.getElementById('admin-drawer').style.display = 'block';
-    setInterval(() => { if(localUpcoming.length > 0) render(); }, 1000);
+    document.getElementById('open-admin').onclick = () => toggleDrawer(true);
+    
+    // Auto-refresh timer every second
+    setInterval(() => {
+        if(localUpcoming.length > 0) render();
+    }, 1000);
+
     render();
 </script>
+</body>
+</html>
+
+
 
 </body>
 </html>
