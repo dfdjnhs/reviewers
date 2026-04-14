@@ -291,6 +291,43 @@
     padding: 10px; font-weight: 900; cursor: pointer; opacity: 0.5; 
 }
 .status-btn.active { opacity: 1; border: 2px solid #22c55e; color: #22c55e; }
+/* Container for the title */
+.scroll-text-container {
+    overflow: hidden;
+    white-space: nowrap;
+    width: 100%;
+    position: relative;
+    mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+}
+
+/* The actual title text */
+.item-title {
+    display: inline-block;
+    padding-left: 0%;
+    animation: slide-text 10s linear infinite;
+    font-size: 0.9rem;
+    font-weight: 900;
+}
+
+/* The animation logic */
+@keyframes slide-text {
+    0% { transform: translateX(0); }
+    10% { transform: translateX(0); } /* Pause at start */
+    45% { transform: translateX(-60%); } /* Slide left */
+    55% { transform: translateX(-60%); } /* Pause at end */
+    90% { transform: translateX(0); } /* Return */
+    100% { transform: translateX(0); }
+}
+
+/* Reset Artist name to be static and clean */
+.artist-name {
+    font-size: 0.75rem;
+    font-weight: 700;
+    opacity: 0.6;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
     </style>
     <link rel="manifest" href="manifest.json">
@@ -506,7 +543,18 @@
                     <div class="timer-tag">${getRemainingTime(u.releaseDate)}</div>
                     <span class="type-tag">${u.type}</span>
                     <img src="${u.img}">
-                    <div class="title-wrapper"><h3>${u.title}</h3></div>
+                    <div class="title-wrapper">
+    <div style="flex: 1; overflow: hidden;">
+        <div class="scroll-text-container">
+            <h3 class="item-title">${a.title}</h3>
+        </div>
+        <p class="artist-name">${a.artist || ''}</p>
+    </div>
+    <div class="score-box" style="background:${isTop ? 'white' : getScoreColor(a.score)}; color:${isTop ? '#2563eb' : 'white'}">
+        ${a.score}
+    </div>
+</div>
+
                 </div>`).join('');
         } else {
             document.getElementById('upcoming-section').style.display = 'none';
