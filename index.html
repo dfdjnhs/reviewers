@@ -112,6 +112,49 @@
 .elite-modal .track-row {
     border-bottom: 1px solid rgba(0,0,0,0.2);
 }
+.rank-row {
+    display: flex;
+    align-items: center;
+    background: var(--white);
+    border: var(--border);
+    padding: 15px;
+    gap: 20px;
+    box-shadow: 4px 4px 0 var(--black);
+    transition: 0.2s var(--ease);
+}
+.rank-row:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--black); }
+
+.rank-number {
+    font-size: 1.5rem;
+    font-weight: 900;
+    width: 40px;
+    font-style: italic;
+}
+
+.rank-img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border: 2px solid var(--black);
+}
+
+.rank-info { flex: 1; }
+.rank-info h4 { font-weight: 900; text-transform: uppercase; line-height: 1; }
+.rank-info p { font-size: 0.8rem; opacity: 0.6; font-weight: 700; }
+.nav-btn {
+    background: none;
+    border: none;
+    font-weight: 900;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    opacity: 0.5;
+    padding-bottom: 2px;
+}
+.nav-btn.active {
+    opacity: 1;
+    border-bottom: 3px solid var(--black);
+}
 
     </style>
     <link rel="manifest" href="manifest.json">
@@ -132,19 +175,41 @@
 </div>
 
 <header>
-    <h1 style="font-weight: 900; font-size: 3.5rem; letter-spacing: -3px;">THE VAULT.</h1>
+    <div style="display:flex; flex-direction:column;">
+        <h1 style="font-weight: 900; font-size: 3.5rem; letter-spacing: -3px;">THE VAULT.</h1>
+<nav style="margin-top:10px; display:flex; gap:15px; overflow-x: auto; white-space: nowrap; padding-bottom: 5px;">
+    <button onclick="showPage('home')" class="nav-btn active" id="nav-home">THE VAULT</button>
+    <button onclick="showPage('rank-albums')" class="nav-btn" id="nav-rank-albums">ALBUM RANKINGS</button>
+    <button onclick="showPage('rank-series')" class="nav-btn" id="nav-rank-series">SERIES RANKINGS</button>
+</nav>
+
+
+    </div>
     <button class="admin-toggle" id="open-admin">Add Entry</button>
 </header>
 
-<section>
-    <h2 class="section-title">Albums</h2>
-    <div class="scroll-container" id="album-list"></div>
-</section>
+<div id="page-home" class="page-view">
+    <section>
+        <h2 class="section-title">Albums</h2>
+        <div class="scroll-container" id="album-list"></div>
+    </section>
+    <section>
+        <h2 class="section-title">Series & Movies</h2>
+        <div class="scroll-container" id="series-list"></div>
+    </section>
+</div>
 
-<section>
-    <h2 class="section-title">Series & Movies</h2>
-    <div class="scroll-container" id="series-list"></div>
-</section>
+<div id="page-rank-albums" class="page-view" style="display:none; padding: 20px 5%;">
+    <h2 class="section-title" style="margin-left:0;">ALBUM LEADERBOARD</h2>
+    <div id="album-rank-container" style="display: flex; flex-direction: column; gap: 15px;"></div>
+</div>
+
+<div id="page-rank-series" class="page-view" style="display:none; padding: 20px 5%;">
+    <h2 class="section-title" style="margin-left:0;">SERIES LEADERBOARD</h2>
+    <div id="series-rank-container" style="display: flex; flex-direction: column; gap: 15px;"></div>
+</div>
+
+
 
 <div id="overlay">
     <div class="modal-content" id="modal-target"></div>
@@ -320,6 +385,57 @@
         }
         render();
     };
+// --- PAGE SWITCHING ---
+window.showPage = function(pageId) {
+    // Hide all pages
+    document.querySelectorAll('.page-view').forEach(p => p.style.display = 'none');
+    
+    // Show selected page
+    document.getElementById('page-' + pageId).style.display = 'block';
+    
+    // Update Nav UI
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('nav-' + pageId).classList.add('active');
+
+    // Trigger specific renders
+    if (pageId === 'home') render(); // Refresh the main scroll lists
+    if (pageId === 'rank-albums') renderSpecificRankings('album');
+    if (pageId === 'rank-series') renderSpecificRankings('cinema');
+};
+
+function renderSpecificRankings(type) {
+    const containerId = type === 'album' ? 'album-rank-container' : 'series-rank-container';
+    const data = type === 'album' ? allAlbums : allCinema;
+    const container = document.getElementById(containerId);
+    
+    // Sort specific data by score (Descending)
+    const sorted = [...data].sort((a, b) => parseFloat(b.score) - parseFloat(a.score));
+    
+    container.innerHTML = sorted.map((item, index) => {
+        const isElite = parseFloat(item.score) >= 94;
+        return `
+            <div class="rank-row ${isElite ? 'elite-card' : ''}" onclick="openModal('${item.id}', '${type}')">
+                <div class="rank-number">#${index + 1}</div>
+                <img src="${item.img || item.poster}" class="rank-img">
+                <div class="rank-info">
+                    <h4>${item.title}</h4>
+                    <p>${item.artist || item.cast || ''}</p>
+                </div>
+                <div class="score-box" style="background:${getScoreColor(item.score)}">${item.score}</div>
+            </div>
+        `;
+    }).join('');
+}
+
+
+// Ensure renderRankings is called whenever a new entry is saved
+const originalSave = document.getElementById('save-btn').onclick;
+document.getElementById('save-btn').onclick = () => {
+    originalSave(); // Execute existing save logic
+    if (document.getElementById('page-rankings').style.display === 'block') {
+        renderRankings();
+    }
+};
 
             function render() {
         // Render Albums
@@ -343,22 +459,22 @@
 
         // Render Cinema
         document.getElementById('series-list').innerHTML = allCinema.map(c => {
-            const isElite = parseFloat(c.score) >= 94;
-            return `
-                <div class="card series-card ${isElite ? 'elite-card' : ''}" data-id="${c.id}">
-                    <div class="delete-btn" onclick="deleteEntry(event, '${c.id}', 'cinema')">X</div>
-                    <span class="type-tag">CINEMA</span>
-                    <img src="${c.poster || c.img}">
-                    <div class="title-wrapper">
-                        <div class="scroll-text-container">
-                            <h3 class="item-title" style="font-weight:900;">${c.title}</h3>
-                            <p class="artist-name">${c.cast || ''}</p>
-                        </div>
-                        <div class="score-box" style="background:${getScoreColor(c.score)}">${c.score}</div>
-                    </div>
+    const isElite = parseFloat(c.score) >= 94;
+    return `
+        <div class="card series-card ${isElite ? 'elite-card' : ''}" data-id="${c.id}" style="width: 160px; flex: 0 0 auto;">
+            <div class="delete-btn" onclick="deleteEntry(event, '${c.id}', 'cinema')">X</div>
+            <span class="type-tag">CINEMA</span>
+            <img src="${c.poster || c.img}" style="height: 220px;">
+            <div class="title-wrapper">
+                <div class="scroll-text-container">
+                    <h3 class="item-title" style="font-size: 0.8rem; font-weight:900;">${c.title}</h3>
                 </div>
-            `;
-        }).join('');
+                <div class="score-box" style="background:${getScoreColor(c.score)}; font-size: 0.7rem; padding: 3px 5px;">${c.score}</div>
+            </div>
+        </div>
+    `;
+}).join('');
+
 
         // Re-attach click events
         document.querySelectorAll('.card').forEach(card => {
