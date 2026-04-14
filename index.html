@@ -141,6 +141,20 @@
 .rank-info { flex: 1; }
 .rank-info h4 { font-weight: 900; text-transform: uppercase; line-height: 1; }
 .rank-info p { font-size: 0.8rem; opacity: 0.6; font-weight: 700; }
+.nav-btn {
+    background: none;
+    border: none;
+    font-weight: 900;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    opacity: 0.5;
+    padding-bottom: 2px;
+}
+.nav-btn.active {
+    opacity: 1;
+    border-bottom: 3px solid var(--black);
+}
 
     </style>
     <link rel="manifest" href="manifest.json">
@@ -163,30 +177,35 @@
 <header>
     <div style="display:flex; flex-direction:column;">
         <h1 style="font-weight: 900; font-size: 3.5rem; letter-spacing: -3px;">THE VAULT.</h1>
-        <nav style="margin-top:10px; display:flex; gap:20px;">
-            <button onclick="showPage('home')" style="background:none; border:none; font-weight:900; cursor:pointer; text-transform:uppercase; font-size:0.8rem; border-bottom:2px solid black;">Vault</button>
-            <button onclick="showPage('rankings')" style="background:none; border:none; font-weight:900; cursor:pointer; text-transform:uppercase; font-size:0.8rem; opacity:0.5;" id="rank-nav">Rankings</button>
-        </nav>
+<nav style="margin-top:10px; display:flex; gap:15px; overflow-x: auto; white-space: nowrap; padding-bottom: 5px;">
+    <button onclick="showPage('home')" class="nav-btn" id="nav-home">ALBUMS</button>
+    <button onclick="showPage('series')" class="nav-btn" id="nav-series">SERIES</button>
+    <button onclick="showPage('rankings')" class="nav-btn" id="nav-rankings">RANKINGS</button>
+</nav>
+
     </div>
     <button class="admin-toggle" id="open-admin">Add Entry</button>
 </header>
 
-<div id="page-home">
+<div id="page-home" class="page-view">
     <section>
         <h2 class="section-title">Albums</h2>
         <div class="scroll-container" id="album-list"></div>
     </section>
+</div>
+
+<div id="page-series" class="page-view" style="display:none;">
     <section>
         <h2 class="section-title">Series & Movies</h2>
-        <div class="scroll-container" id="series-list"></div>
+        <div id="series-list" style="display: flex; flex-wrap: wrap; padding: 20px 5%; gap: 20px; justify-content: center;"></div>
     </section>
 </div>
 
-<div id="page-rankings" style="display:none; padding: 20px 5%;">
+<div id="page-rankings" class="page-view" style="display:none; padding: 20px 5%;">
     <h2 class="section-title" style="margin-left:0;">GLOBAL RANKINGS</h2>
-    <div id="rankings-container" style="display: flex; flex-direction: column; gap: 15px;">
-        </div>
+    <div id="rankings-container" style="display: flex; flex-direction: column; gap: 15px;"></div>
 </div>
+
 
 <div id="overlay">
     <div class="modal-content" id="modal-target"></div>
@@ -364,18 +383,22 @@
     };
 // --- PAGE SWITCHING ---
 window.showPage = function(pageId) {
-    document.getElementById('page-home').style.display = pageId === 'home' ? 'block' : 'none';
-    document.getElementById('page-rankings').style.display = pageId === 'rankings' ? 'block' : 'none';
+    // Hide all pages
+    document.querySelectorAll('.page-view').forEach(p => p.style.display = 'none');
     
-    // Style nav buttons
-    const navs = document.querySelectorAll('nav button');
-    navs[0].style.opacity = pageId === 'home' ? '1' : '0.5';
-    navs[0].style.borderBottom = pageId === 'home' ? '2px solid black' : 'none';
-    navs[1].style.opacity = pageId === 'rankings' ? '1' : '0.5';
-    navs[1].style.borderBottom = pageId === 'rankings' ? '2px solid black' : 'none';
+    // Show selected page
+    const activePage = pageId === 'home' ? 'page-home' : 
+                       pageId === 'series' ? 'page-series' : 'page-rankings';
+    document.getElementById(activePage).style.display = 'block';
+    
+    // Update Nav UI
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('nav-' + pageId).classList.add('active');
 
+    // Special renders
     if (pageId === 'rankings') renderRankings();
 };
+
 
 // --- RENDER RANKINGS ---
 function renderRankings() {
@@ -433,22 +456,22 @@ document.getElementById('save-btn').onclick = () => {
 
         // Render Cinema
         document.getElementById('series-list').innerHTML = allCinema.map(c => {
-            const isElite = parseFloat(c.score) >= 94;
-            return `
-                <div class="card series-card ${isElite ? 'elite-card' : ''}" data-id="${c.id}">
-                    <div class="delete-btn" onclick="deleteEntry(event, '${c.id}', 'cinema')">X</div>
-                    <span class="type-tag">CINEMA</span>
-                    <img src="${c.poster || c.img}">
-                    <div class="title-wrapper">
-                        <div class="scroll-text-container">
-                            <h3 class="item-title" style="font-weight:900;">${c.title}</h3>
-                            <p class="artist-name">${c.cast || ''}</p>
-                        </div>
-                        <div class="score-box" style="background:${getScoreColor(c.score)}">${c.score}</div>
-                    </div>
+    const isElite = parseFloat(c.score) >= 94;
+    return `
+        <div class="card series-card ${isElite ? 'elite-card' : ''}" data-id="${c.id}" style="width: 160px; flex: 0 0 auto;">
+            <div class="delete-btn" onclick="deleteEntry(event, '${c.id}', 'cinema')">X</div>
+            <span class="type-tag">CINEMA</span>
+            <img src="${c.poster || c.img}" style="height: 220px;">
+            <div class="title-wrapper">
+                <div class="scroll-text-container">
+                    <h3 class="item-title" style="font-size: 0.8rem; font-weight:900;">${c.title}</h3>
                 </div>
-            `;
-        }).join('');
+                <div class="score-box" style="background:${getScoreColor(c.score)}; font-size: 0.7rem; padding: 3px 5px;">${c.score}</div>
+            </div>
+        </div>
+    `;
+}).join('');
+
 
         // Re-attach click events
         document.querySelectorAll('.card').forEach(card => {
