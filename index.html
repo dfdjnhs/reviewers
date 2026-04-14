@@ -73,6 +73,30 @@
         .track-input-row { display: flex; gap: 5px; margin-bottom: 5px; align-items: center; background: #111; padding: 5px; }
         .track-input-row input { background: #333 !important; }
         .delete-btn { position: absolute; top: -10px; right: -10px; background: #ef4444; color: white; border: 2px solid var(--black); width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; font-weight: 900; cursor: pointer; z-index: 10; }
+/* Special Styling for Elite Albums */
+.elite-card {
+    background-color: #fde047 !important; /* Bright Yellow */
+    background-image: radial-gradient(var(--black) 1px, transparent 0);
+    background-size: 15px 15px; /* Creates the "Star/Texture" feel */
+    border: 4px solid var(--black) !important;
+    transform: rotate(-1deg); /* Slight tilt to make it stand out */
+}
+
+.elite-card .score-box {
+    background: var(--black) !important;
+    color: #fde047 !important;
+    box-shadow: none;
+}
+
+/* Optional: Subtle pulse animation for Elite cards */
+@keyframes elite-glow {
+    from { box-shadow: 6px 6px 0 var(--black); }
+    to { box-shadow: 12px 12px 0 var(--black); }
+}
+.elite-card:hover {
+    animation: elite-glow 0.5s infinite alternate;
+}
+
     </style>
     <link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -281,21 +305,27 @@
         render();
     };
 
-    function render() {
-        document.getElementById('album-list').innerHTML = allAlbums.map(a => `
-            <div class="card album-card" data-id="${a.id}">
-                <div class="delete-btn" onclick="deleteEntry(event, '${a.id}', 'album')">X</div>
-                <span class="type-tag">ALBUM</span>
-                <img src="${a.img}">
-                <div class="title-wrapper">
-                    <div class="scroll-text-container">
-                        <h3 class="item-title">${a.title}</h3>
-                        <p class="artist-name">${a.artist}</p>
+        function render() {
+        document.getElementById('album-list').innerHTML = allAlbums.map(a => {
+            // Check if score is 94 or higher for Elite styling
+            const isElite = parseFloat(a.score) >= 94;
+            const eliteClass = isElite ? 'elite-card' : '';
+
+            return `
+                <div class="card album-card ${eliteClass}" data-id="${a.id}">
+                    <div class="delete-btn" onclick="deleteEntry(event, '${a.id}', 'album')">X</div>
+                    <span class="type-tag">ALBUM</span>
+                    <img src="${a.img}">
+                    <div class="title-wrapper">
+                        <div class="scroll-text-container">
+                            <h3 class="item-title" style="font-weight:900;">${a.title}</h3>
+                            <p class="artist-name">${a.artist}</p>
+                        </div>
+                        <div class="score-box" style="background:${getScoreColor(a.score)}">${a.score}</div>
                     </div>
-                    <div class="score-box" style="background:${getScoreColor(a.score)}">${a.score}</div>
                 </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
 
         document.getElementById('series-list').innerHTML = allCinema.map(c => `
             <div class="card series-card" data-id="${c.id}">
@@ -304,7 +334,7 @@
                 <img src="${c.poster || c.img}">
                 <div class="title-wrapper">
                     <div class="scroll-text-container">
-                        <h3 class="item-title">${c.title}</h3>
+                        <h3 class="item-title" style="font-weight:900;">${c.title}</h3>
                         <p class="artist-name">${c.cast || ''}</p>
                     </div>
                     <div class="score-box" style="background:${getScoreColor(c.score)}">${c.score}</div>
@@ -319,6 +349,7 @@
             };
         });
     }
+
 
     function openModal(id, type) {
         const item = type === 'album' ? allAlbums.find(a => a.id == id) : allCinema.find(c => c.id == id);
