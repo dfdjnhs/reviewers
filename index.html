@@ -44,8 +44,31 @@
         @keyframes marquee { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
         .artist-name { font-size: 0.85rem; font-weight: 700; opacity: 0.6; margin-top: 2px; }
 
-        #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; overflow-y: auto; padding: 20px; }
-        .modal-content { background: var(--white); border: var(--border); max-width: 900px; margin: 40px auto; padding: 40px; position: relative; box-shadow: 15px 15px 0 var(--black); }
+ /* FIX 1: The Global Overlay must be fixed to the viewport */
+    #overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0,0,0,0.9);
+        z-index: 9999;
+        overflow-y: auto;
+        padding: 20px;
+        backdrop-filter: blur(4px);
+    }
+.modal-content {
+        background: var(--white);
+        border: var(--border);
+        max-width: 850px;
+        width: 95%;
+        margin: 40px auto;
+        padding: 30px;
+        position: relative;
+        box-shadow: 15px 15px 0 var(--black);
+        display: block; /* Force block to ignore parent flex */
+    }
         .track-row { display: flex; justify-content: space-between; border-bottom: 1px solid #ddd; padding: 8px 0; font-size: 0.9rem; }
         
         .bg-shape { position: fixed; border: var(--border); z-index: -1; opacity: 0.15; pointer-events: none; }
@@ -183,11 +206,6 @@
     100% { background-position: 50px 50px; }
 }
 
-@keyframes shine-sweep {
-    0% { left: -100%; }
-    100% { left: 200%; }
-}
-
 /* Ensure text and boxes pop on Blue */
 .champion-card .item-title, .champion-card .artist-name { color: white !important; }
 .champion-card .score-box { 
@@ -198,13 +216,37 @@
 
 /* Expanded Modal for Champion */
 .champion-modal {
-    background-color: #1e40af !important; /* Darker Blue */
-    color: white !important;
-    border: 8px solid var(--black) !important;
-}
+        background-color: #1e40af !important;
+        background-image: linear-gradient(45deg, rgba(255,255,255,0.05) 25%, transparent 25%);
+        background-size: 40px 40px;
+        color: white !important;
+        border: 8px solid var(--black) !important;
+        overflow: hidden; /* CRITICAL: Clips the shine sweep */
+    }
 .champion-modal h1, .champion-modal h2, .champion-modal h3 { color: white !important; }
 .champion-modal .track-row { border-bottom: 1px solid rgba(255,255,255,0.2); }
+.champion-modal::after {
+    content: '';
+    position: absolute;
+    top: 0; 
+    left: -100vw; /* Use viewport width instead of % */
+    width: 50vw;
+    height: 100%;
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.2), transparent);
+    transform: skewX(-20deg);
+    animation: modal-shine-sweep 3s infinite;
+    pointer-events: none;
+    z-index: 1;
+}
 
+@keyframes modal-shine-sweep {
+    0% { transform: translateX(-100vw) skewX(-20deg); }
+    100% { transform: translateX(200vw) skewX(-20deg); }
+}
+
+
+    /* Keep content visible above the shine */
+    .champion-modal > * { position: relative; z-index: 2; }
     </style>
     <link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -212,9 +254,6 @@
     
 </head>
 <body>
-
-<div class="bg-shape circle"></div>
-<div class="bg-shape square"></div>
 
 <div id="loader">
     <div class="loading-text">RETRIEVING DATA...</div>
@@ -328,8 +367,7 @@
         document.querySelectorAll('.page-view').forEach(p => p.style.display = 'none');
         document.getElementById('page-' + pageId).style.display = 'block';
         document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-        const activeBtn = document.getElementById('nav-' + pageId);
-        if(activeBtn) activeBtn.classList.add('active');
+        if(document.getElementById('nav-' + pageId)) document.getElementById('nav-' + pageId).classList.add('active');
 
         if (pageId === 'home') render();
         if (pageId === 'rank-albums') renderSpecificRankings('album');
