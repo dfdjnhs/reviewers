@@ -3,645 +3,366 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reviewers</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <title>The Vault</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --ease: cubic-bezier(0.34, 1.56, 0.64, 1);
             --black: #000000;
             --white: #ffffff;
-            --border: 2.5px solid var(--black);
+            --bg: #f3f3f3;
+            --border: 3px solid var(--black);
+            --ease: cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-
-        * { 
-            margin: 0px; 
-            padding: 0; 
-            box-sizing: border-box; 
-        }
-        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; color: var(--black); overflow-x: hidden; }
-
-        /* --- HEADER & LOADER --- */
-        header.main-nav {
-            background: var(--white);
-            border-bottom: var(--border);
-            padding: 15px 5%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--black); overflow-x: hidden; }
+        header { padding: 40px 5%; border-bottom: var(--border); background: var(--white); display: flex; justify-content: space-between; align-items: center; }
         
-        p {
-            font-size: 0.55rem; 
-            font-weight: 700; 
-            text-transform: uppercase;
-        }
+        .admin-toggle { background: var(--black); color: var(--white); border: none; padding: 10px 20px; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 0.8rem; }
+
+        section { margin: 50px 0; }
+        .section-title { font-size: 2.5rem; font-weight: 900; margin-left: 5%; margin-bottom: 20px; text-transform: uppercase; }
         
-        .logo { font-weight: 800; font-size: 1.4rem; letter-spacing: -1px; }
-
-        #loader {
-            display: none;
-            position: fixed;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 1000;
-        }
-        .spinner {
-            width: 40px; height: 40px;
-            border: 4px solid rgba(0,0,0,0.1);
-            border-left-color: var(--black);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-.video-wrapper {
-            position: relative;
-            width: 100%;
-            padding-bottom: 56.25%; /* 16:9 aspect ratio */
-            margin-bottom: 20px;
-            border-radius: 8px;
-            overflow: hidden;
-            background-color: #000;
-        }
-
-        .container { max-width: 900px; margin: 30px auto; padding: 0 20px; transition: opacity 0.3s ease; }
-
-        /* --- TIMER --- */
-        .timer-container {
-            background: var(--white);
-            border: var(--border);
-            border-radius: 5px;
-            padding: 20px;
-            margin-bottom: 30px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            box-shadow: 8px 8px 0 var(--black);
-            transition: transform 0.3s var(--ease);
-        }
-        .timer-container:hover { transform: translate(-4px, -4px); box-shadow: 12px 12px 0 var(--black); }
-        .timer-label { font-weight: 800; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 2px; margin-bottom: 12px; color: #ff4757; }
-        .timer-display { display: flex; gap: 10px; align-items: center; }
-        .timer-segment { text-align: center; min-width: 45px; }
-        .timer-value { font-size: 1.8rem; font-weight: 800; line-height: 1; }
-        .timer-unit { font-size: 0.55rem; font-weight: 700; text-transform: uppercase; opacity: 0.5; }
-
-        /* --- BULLETIN --- */
-        .bulletin-board {
-            background: var(--white);
-            border: var(--border);
-            border-radius: 5px;
-            padding: 25px;
-            margin-bottom: 40px;
-            box-shadow: 10px 10px 0 rgba(0,0,0,0.05);
-        }
-        .wrapped {
-            background: var(--white);
-            border: var(--border);
-            border-radius: 5px;
-            padding: 25px;
-            margin-bottom: 40px;
-            box-shadow: 10px 10px 0 rgba(0,0,0,0.05);
-        }
-        .board-header { font-weight: 800; text-transform: uppercase; font-size: 0.85rem; margin-bottom: 15px; }
-        .announcement-note {
-             background: #fffbeb;
-             border: 2px solid var(--black);
-             padding: 15px;
-             border-radius: 4px;
-             margin-bottom: 12px;
-             transition: transform 0.3s var(--ease);
-             transform: rotate(-2deg);
-             box-shadow: 4px 4px 8px rgba(0,0,0,0.1), -2px -2px 6px rgba(0,0,0,0.05);
-             position: relative;
-        }
-
-        .announcement-note:nth-child(2) {
-            transform: rotate(1.5deg);
-        }
-
-        .announcement-note:nth-child(3) {
-            transform: rotate(-1deg);
-        }
-
-        .announcement-note:hover { 
-            transform: rotate(-2deg) translate(-4px, -4px); 
-            box-shadow: 8px 8px 12px rgba(0,0,0,0.15), -2px -2px 6px rgba(0,0,0,0.05);
-        }
+        .scroll-container { display: flex; overflow-x: auto; padding: 20px 5%; gap: 20px; scroll-snap-type: x mandatory; scrollbar-width: none; }
+        .scroll-container::-webkit-scrollbar { display: none; }
         
-        .announcement-note::before {
-            content: '';
-            position: absolute;
-            top: -8px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 30px;
-            height: 15px;
-            background: rgba(0,0,0,0.1);
-            border-radius: 50%;
-            filter: blur(3px);
-        }
+        .card { flex: 0 0 auto; scroll-snap-align: start; background: var(--white); border: var(--border); padding: 12px; box-shadow: 6px 6px 0 var(--black); transition: 0.3s var(--ease); cursor: pointer; position: relative; }
+        .card:hover { transform: translate(-4px, -4px); box-shadow: 10px 10px 0 var(--black); }
+        .card:active { transform: scale(0.98); }
+
+        .album-card { width: 250px; }
+        .album-card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border: var(--border); }
+        .series-card { width: 230px; } 
+        .series-card img { width: 100%; aspect-ratio: 11/16; object-fit: cover; border: var(--border); }
         
-        .feedback-form {
-            background: var(--white);
-            border: var(--border);
-            border-radius: 5px;
-            padding: 20px;
-            margin: 30px;
-            box-shadow: 8px 8px 0 var(--black);
-            transition: transform 0.3s var(--ease);
-        }
+        .type-tag { font-size: 10px; font-weight: 900; text-transform: uppercase; background: var(--black); color: white; padding: 2px 6px; display: inline-block; margin-bottom: 8px; }
         
-.feedback-form:hover {
-    transform: translate(-4px, -4px);
-    box-shadow: 12px 12px 0 var(--black);
-}
+        .title-wrapper { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-top: 10px; overflow: hidden; }
+        .score-box { background: var(--black); color: white; padding: 5px 8px; font-weight: 900; font-size: 0.9rem; border: 2px solid var(--black); flex-shrink: 0; }
 
-.form-title {
-    font-weight: 800;
-    font-size: 1.3rem;
-    margin-bottom: 20px;
-    text-align: center;
-}
+        .scroll-text-container { overflow: hidden; white-space: nowrap; width: 100%; }
+        .animate-text { display: inline-block; padding-left: 100%; animation: marquee 8s linear infinite; }
+        @keyframes marquee { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
+        .artist-name { font-size: 0.85rem; font-weight: 700; opacity: 0.6; margin-top: 2px; }
 
-.form-group {
-    margin-bottom: 18px;
-    display: flex;
-    flex-direction: column;
-}
-
-.form-group label {
-    font-weight: 700;
-    margin-bottom: 8px;
-    font-size: 0.95rem;
-}
-
-.form-group input,
-.form-group textarea {
-    padding: 12px 15px;
-    border: 2px solid var(--black);
-    border-radius: 8px;
-    font-family: 'Inter', sans-serif;
-    font-size: 0.95rem;
-    transition: 0.3s var(--ease);
-}
-
-.form-group input:focus,
-.form-group textarea:focus {
-    outline: none;
-    background: #f0f0f0;
-    box-shadow: inset 0 0 0 2px var(--black);
-    transform: scale(1.02);
-}
-
-.form-group input::placeholder,
-.form-group textarea::placeholder {
-    color: #999;
-}
-
-.submit-btn {
-    width: 100%;
-    padding: 14px;
-    background: var(--black);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: 700;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: 0.3s var(--ease);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.submit-btn:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 4px 4px 0 var(--black);
-}
-
-.submit-btn:active {
-    transform: translate(0, 0);
-    box-shadow: 2px 2px 0 var(--black);
-}
-        /* --- ANIMATED EXAM SECTION --- */
-        .exam-hero {
-            background: var(--white);
-            border: var(--border);
-            border-radius: 5px;
-            padding: 25px;
-            margin: 22px;
-            text-align: center;
-            color: var(--black);
-            position: relative;
-            overflow: hidden;
-            box-shadow: 12px 12px 0 var(--black);
-            transition: transform 0.3s var(--ease);
-        }
-
-        .exam-hero:hover {
-            transform: translate(-4px, -4px);
-            box-shadow: 16px 16px 0 var(--black);
-        }
-
-        .exam-hero::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 400px;
-            height: 400px;
-            border: var(--border);
-            border-radius: 50%;
-            animation: rotateBorder 8s linear infinite;
-            opacity: 0.1;
-            pointer-events: none;
-        }
-
-        @keyframes rotateBorder {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .exam-content {
-            position: relative;
-            z-index: 2;
-        }
-
-        .exam-title {
-            font-size: 3.2rem;
-            font-weight: 800;
-            margin-bottom: 15px;
-            letter-spacing: -1.5px;
-            animation: titleShake 2s ease-in-out infinite;
-            text-transform: uppercase;
-        }
-
-        @keyframes titleShake {
-            0%, 100% { 
-                transform: skewX(0deg);
-            }
-            25% { 
-                transform: skewX(-2deg);
-            }
-            75% { 
-                transform: skewX(2deg);
-            }
-        }
-
-        .exam-subtitle {
-            font-size: 1rem;
-            opacity: 0.7;
-            margin-bottom: 30px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            animation: fadeInOut 2s ease-in-out infinite;
-        }
-
-        @keyframes fadeInOut {
-            0%, 100% { opacity: 0.6; }
-            50% { opacity: 1; }
-        }
-
-        /* --- EXAM TIMER --- */
-        .exam-timer-container {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin: 30px;
-            flex-wrap: wrap;
-        }
-
-        .exam-timer-segment {
-            background: var(--white);
-            border: var(--border);
-            padding: 18px 20px;
-            border-radius: 5px;
-            text-align: center;
-            min-width: 75px;
-            box-shadow: 6px 6px 0 rgba(0,0,0,0.05);
-            transition: 0.3s var(--ease);
-        }
-
-        .exam-timer-segment:hover {
-            transform: translate(-2px, -2px);
-            box-shadow: 8px 8px 0 var(--black);
-        }
-
-        .exam-timer-value {
-            font-size: 2rem;
-            font-weight: 800;
-            line-height: 1;
-            animation: timerPulse 1s ease-in-out infinite;
-        }
-
-        @keyframes timerPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.08); }
-        }
-
-        .exam-timer-label {
-            font-size: 0.65rem;
-            text-transform: uppercase;
-            font-weight: 700;
-            margin-top: 6px;
-            opacity: 0.6;
-            letter-spacing: 1px;
-        }
-
-        /* --- EXAM BUTTONS --- */
-        .exam-buttons {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .exam-btn {
-            background: var(--black);
-            color: white;
-            border: var(--border);
-            padding: 13px 30px;
-            border-radius: 5px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: 0.3s var(--ease);
-            text-transform: uppercase;
-            font-size: 0.8rem;
-            letter-spacing: 1px;
-        }
-
-        .exam-btn:hover {
-            transform: translate(-4px, -4px);
-            box-shadow: 8px 8px 0 var(--black);
-        }
-
-        .exam-btn:active {
-            transform: translate(0px, 0px);
-            box-shadow: 2px 2px 0 var(--black);
-        }
-
-        .exam-btn-secondary {
-            background: var(--white);
-            color: var(--black);
-            border: var(--border);
-        }
-
-        .exam-btn-secondary:hover {
-            background: var(--black);
-            color: white;
-        }
-        /* --- FOLDERS --- */
-        section { margin-bottom: 40px; }
-        .section-header { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; font-weight: 800; margin-bottom: 15px; color: #888; }
+        #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; overflow-y: auto; padding: 20px; }
+        .modal-content { background: var(--white); border: var(--border); max-width: 900px; margin: 40px auto; padding: 40px; position: relative; box-shadow: 15px 15px 0 var(--black); }
+        .track-row { display: flex; justify-content: space-between; border-bottom: 1px solid #ddd; padding: 8px 0; font-size: 0.9rem; }
         
-        .folder-box {
-            padding: 25px;
-            border: var(--border);
-            border-radius: 5px;
-            cursor: pointer;
-            color: white;
-            margin-bottom: 15px;
-            transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
-        }
-        .folder-box:hover { transform: translate(-6px, -8px); box-shadow: 10px 10px 0 var(--black); }
-        .folder-box:active { transform: translate(-2px, -2px) scale(0.98); box-shadow: 2px 2px 0 var(--black); transition: 0.1s; }
+        .bg-shape { position: fixed; border: var(--border); z-index: -1; opacity: 0.15; pointer-events: none; }
+        .circle { width: 400px; height: 400px; border-radius: 50%; top: 10%; left: -50px; animation: drift 5s ease-in-out infinite alternate; }
+        .square { width: 400px; height: 400px; bottom: 5%; right: -30px; animation: rotateDrift 60s linear infinite; }
 
-        .feat-grad { background: darkseagreen; }
+        @keyframes drift { from { transform: translate(0, 0); } to { transform: translate(50px, 100px); } }
+        @keyframes rotateDrift { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
+        #loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--black); color: var(--white); z-index: 4000; justify-content: center; align-items: center; flex-direction: column; }
+        .loading-text { font-size: 2rem; font-weight: 900; letter-spacing: 5px; animation: blink 0.8s steps(2, start) infinite; }
+        .loading-bar-container { width: 200px; height: 20px; border: 2px solid var(--white); margin-top: 20px; padding: 2px; }
+        .loading-bar-fill { height: 100%; background: var(--white); width: 0%; }
+        @keyframes progress { to { width: 100%; } }
+        @keyframes blink { to { opacity: 0.3; } }
 
-        /* --- SUBJECT VIEW --- */
-        #subject-view { display: none; animation: slideUp 0.4s var(--ease); }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } }
+        #admin-drawer { display: none; position: fixed; bottom: 0; left: 0; width: 100%; background: var(--black); color: var(--white); border-top: var(--border); padding: 20px; z-index: 3000; }
+        .admin-content h3 { margin-bottom: 15px; font-weight: 900; }
+        .admin-content input, .admin-content textarea, .admin-content select { background: #222; color: white; border: 1px solid #444; padding: 10px; margin-bottom: 10px; width: 100%; font-family: 'Inter', sans-serif; }
+        .admin-btns { display: flex; gap: 10px; }
         
-        .file-link { 
-            text-decoration: none; color: inherit; display: block; margin-bottom: 10px;
-        }
-        .file-row { 
-            background: white; border: var(--border); padding: 18px; 
-            border-radius: 5px; display: flex; justify-content: space-between; 
-            font-weight: 600; transition: 0.3s var(--ease); 
-        }
-        .file-row:hover { transform: translate(-4px, -4px); box-shadow: 6px 6px 0 var(--black); background: #fdfdfd; }
+        .cat-btn { flex: 1; background: var(--white); color: var(--black); border: none; padding: 40px 20px; font-weight: 900; font-size: 1rem; cursor: pointer; text-transform: uppercase; transition: 0.2s var(--ease); }
+        .cat-btn:hover { background: #22c55e; transform: translateY(-5px); }
 
-        .back-btn { padding: 12px 20px; background: var(--black); color: white; border: none; border-radius: 5px; font-weight: 700; cursor: pointer; margin-bottom: 30px; }
-
+        .track-input-row { display: flex; gap: 5px; margin-bottom: 5px; align-items: center; background: #111; padding: 5px; }
+        .track-input-row input { background: #333 !important; }
+        .delete-btn { position: absolute; top: -10px; right: -10px; background: #ef4444; color: white; border: 2px solid var(--black); width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; font-weight: 900; cursor: pointer; z-index: 10; }
     </style>
+    <link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+    
 </head>
 <body>
 
-<header class="main-nav"><div class="logo">8-MERCURY</div></header>
-<div id="loader"><div class="spinner"></div></div>
-<div class="exam-hero">
-    <div class="exam-content">
-        <div class="exam-title">4TH AND FINAL EXAM</div>
+<div class="bg-shape circle"></div>
+<div class="bg-shape square"></div>
 
-        <div class="exam-timer-container">
-            <div class="exam-timer-segment">
-                <div class="exam-timer-value" id="exam-days">00</div>
-                <div class="exam-timer-label">Days</div>
-            </div>
-            <div class="exam-timer-segment">
-                <div class="exam-timer-value" id="exam-hours">00</div>
-                <div class="exam-timer-label">Hours</div>
-            </div>
-            <div class="exam-timer-segment">
-                <div class="exam-timer-value" id="exam-minutes">00</div>
-                <div class="exam-timer-label">Minutes</div>
-            </div>
-            <div class="exam-timer-segment">
-                <div class="exam-timer-value" id="exam-seconds">00</div>
-                <div class="exam-timer-label">Seconds</div>
-            </div>
-        </div>
-
-        <div class="exam-buttons">
-            <button class="exam-btn" onclick="scrollToReviewers()">📖 View Reviewers</button>
-        </div>
-    </div>
-</div>
-<div class="container" id="main-content">
-    <div id="dashboard-ui">
-        <div class="timer-container">
-            <div class="timer-label">END OF S.Y. RITES - March 31, 2026</div>
-            <div class="timer-display" id="exam-timer">
-                <div class="timer-segment"><div class="timer-value" id="days">00</div><div class="timer-unit">Days</div></div>
-                <div style="font-weight:800;">:</div>
-                <div class="timer-segment"><div class="timer-value" id="hours">00</div><div class="timer-unit">Hrs</div></div>
-                <div style="font-weight:800;">:</div>
-                <div class="timer-segment"><div class="timer-value" id="minutes">00</div><div class="timer-unit">Min</div></div>
-                <div style="font-weight:800;">:</div>
-                <div class="timer-segment"><div class="timer-value" id="seconds">00</div><div class="timer-unit">Sec</div></div>
-            </div>
-        </div>
-        <div class="bulletin-board">
-            <div class="board-header">📌 Deadlines/Assignments ~ Fri, Mar 13 - 7:21pm</div>
-            <div class="announcement-note">
-                <span class="note-date"></span>
-                <p class="note-text">No deadlines/assignments for today.</p>
-            </div>
-        </div>
-        <div class="bulletin-board">
-            <div class="board-header">📌 Announcements</div>
-            <div class="announcement-note">
-                <p class="note-text">English Lesson 1 to 4 available!</p>
-                <br>
-                <div class="folder-box feat-grad" onclick="openSubject('English')">
-                <h3>English</h3>
-                <p>Lesson 1 to 4 now available!</p>
-            </div>
-            </div>
-            <div class="announcement-note">
-                <p class="note-text">MATH lesson 1 and 2 now Available!</p>
-                <br>
-                <div class="folder-box feat-grad" onclick="openSubject('Mathematics')">
-                <h3>Mathematics</h3>
-                <p>Lesson 1 and 2 now available!</p>
-            </div>
-            </div>
-        </div>
-
-        <section>
-            <h2 class="section-header">New Reviewers</h2>
-            <div class="folder-box feat-grad" onclick="openSubject('Mathematics')">
-                <h3>Mathematics</h3>
-                <p>Lesson 1 and 2 now Available!</p>
-            </div>
-            <div class="folder-box feat-grad" onclick="openSubject('Science')">
-                <h3>Science</h3>
-                <p>Lesson 1 available!</p>
-            </div>
-            <div class="folder-box feat-grad" onclick="openSubject('Filipino')">
-                <h3>Filipino</h3>
-                <p>Lesson 1 to 3 now available!</p>
-            </div>
-            <div class="folder-box feat-grad" onclick="openSubject('English')">
-                <h3>[NEW] English</h3>
-                <p>Lesson 1 to 4 now available!</p>
-            </div>
-        </section>
-
-    </div>
-
-    <div id="subject-view">
-        <button class="back-btn" onclick="goBack()">← Back</button>
-        <h1 id="subject-title" style="margin-bottom: 25px; font-size: 2.2rem;">Subject</h1>
-        <div id="file-list"></div>
+<div id="loader">
+    <div class="loading-text">RETRIEVING DATA...</div>
+    <div class="loading-bar-container">
+        <div class="loading-bar-fill" id="fill"></div>
     </div>
 </div>
 
-<form action="https://formspree.io/f/mbdzkjle" method="POST" class="feedback-form">
-  <h3 class="form-title">📝 Request a Subject</h3>
-  <p>Please don't request inappropriate/offensive things in this field. — 🫶</p>
-  <br>
-  
-  <div class="form-group">
-    <label for="text">Name:</label>
-    <input type="text" name="name" id="name" placeholder="Your name" required>
-  </div>
-  
-  <div class="form-group">
-    <label for="subject">Subject:</label>
-    <input type="text" name="subject" id="subject" placeholder="Subject Here" required>
-  </div>
-  
-  <div class="form-group">
-    <label for="Topic">Topic:</label>
-    <input type="text" name="topic" id="topic" placeholder="Topic/Lesson" required>
-  </div>
-  
-  <button type="submit" class="submit-btn">Send Request</button>
-</form>
-<script>
-    // --- EDIT YOUR LINKS HERE ---
-    // Format: 'Folder Name': [ { name: 'Display Name', url: 'LINK_HERE' } ]
-    const data = {
-        'Mathematics': [
-            { name: 'Lesson 1 - Solving Linear Equations and Probability', url: 'https://1drv.ms/w/c/b38591e40349d389/IQDd8peVjQO-S7HZ0_zAh-vKAVQYKC_5Hieo_uKltVBhK3g?e=wJGywz' },
-            { name: 'Lesson 2 - Probability and Statistics', url: 'https://1drv.ms/w/c/b38591e40349d389/IQCch7B_NirCR7rSqomkvmjOAe2Agfukx-j39b27uzq_7BY?e=baEt67' },
-        ],
-        'Science': [
-            { name: 'Lesson 1 - Speed, Velocity, Acceleration, and Different Types of Graphs', url: 'https://1drv.ms/w/c/b38591e40349d389/IQClB9XmcTFDR5GtrnKFkgLoAR1ug-hZviHz12Mo7IfX4iw?e=iz5iMX' }, 
-        ],
-        'Filipino': [
-            { name: 'Lesson 1 - Talambuhay ni Francisco Balagtas', url: 'https://1drv.ms/w/c/b38591e40349d389/IQA1dhTeTKWkS5BeMY0egFB_AUw89heJuJf6BYNgXhysfPM?e=V6YUCe' },
-            { name: 'Lesson 2 - Mga Uri ng Tayutay', url: 'https://1drv.ms/w/c/b38591e40349d389/IQCHIARpzYiXSrKtqzG-9IsMAVtkowVNduncAfwGIzbIx8w?e=IpUl9i' },
-            { name: 'Lesson 3 - Mga Tauhan at Buod ng Florante at Laura', url: 'https://1drv.ms/w/c/b38591e40349d389/IQBv0x7Q8FurQIHll242Y3V9AUU9QSGtijSt2aeQd2fkBww?e=9sf8Pp' },
-        ],
-    
-        'English': [
-            { name: 'Lesson 1 - Types of Letters', url: 'https  ://1drv.ms/w/c/b38591e40349d389/IQB-4ckePrCGTYNYCUTqTfVBAaY5v3vCDBtlTNivZWaiOAI?e=npQKZb' },
-            { name: 'Lesson 2 - Parts of a Letter', url: 'https://1drv.ms/w/c/b38591e40349d389/IQARAwtQoiPST6Wb3cexjpG_AVd2HEoA6ac2ImrlaKGYNY8?e=ILMeyk' },
-            { name: 'Lesson 3 & 4 - Style, Diction, Tone and Modals', url: 'https://1drv.ms/w/c/b38591e40349d389/IQBBwcyNgFn_RbGNt2913o2EAQtki84ALEVUUOZggsZcNH8?e=jFeIAE' },
-        ]
-    }
-    function runExamTimer() {
-        const target = new Date("March 18, 2026 00:00:00").getTime();
-        const now = new Date().getTime();
-        const diff = target - now;
-        if (diff > 0) {
-            document.getElementById("exam-days").innerText = Math.floor(diff / (1000 * 60 * 60 * 24)).toString().padStart(2, '0');
-            document.getElementById("exam-hours").innerText = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
-            document.getElementById("exam-minutes").innerText = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
-            document.getElementById("exam-seconds").innerText = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0');
-        }
-    }
-    setInterval(runExamTimer, 1000);
-    runExamTimer();
-    function runTimer() {
-        const target = new Date("March 31, 2026 00:00:00").getTime();
-        const now = new Date().getTime();
-        const diff = target - now;
-        if (diff > 0) {
-            document.getElementById("days").innerText = Math.floor(diff / (1000 * 60 * 60 * 24)).toString().padStart(2, '0');
-            document.getElementById("hours").innerText = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
-            document.getElementById("minutes").innerText = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
-            document.getElementById("seconds").innerText = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0');
-        }
-    }
-    setInterval(runTimer, 1000);
-    runTimer();
+<header>
+    <h1 style="font-weight: 900; font-size: 3.5rem; letter-spacing: -3px;">THE VAULT.</h1>
+    <button class="admin-toggle" id="open-admin">Add Entry</button>
+</header>
 
-    function openSubject(name) {
-        const loader = document.getElementById('loader');
-        const content = document.getElementById('main-content');
-        loader.style.display = 'block';
-        content.style.opacity = '0.3';
+<section>
+    <h2 class="section-title">Albums</h2>
+    <div class="scroll-container" id="album-list"></div>
+</section>
 
-        setTimeout(() => {
-            loader.style.display = 'none';
-            content.style.opacity = '1';
-            document.getElementById('dashboard-ui').style.display = 'none';
-            document.getElementById('subject-view').style.display = 'block';
-            document.getElementById('subject-title').innerText = name;
+<section>
+    <h2 class="section-title">Series & Movies</h2>
+    <div class="scroll-container" id="series-list"></div>
+</section>
 
-            const list = document.getElementById('file-list');
-            list.innerHTML = '';
+<div id="overlay">
+    <div class="modal-content" id="modal-target"></div>
+</div>
+
+<div id="admin-drawer">
+    <div class="admin-content">
+        <div id="admin-step-1">
+            <h3 style="text-align: center; margin-bottom: 20px;">SELECT CATEGORY</h3>
+            <div style="display: flex; gap: 15px;">
+                <button class="cat-btn" onclick="selectCategory('album')">ALBUMS / SONGS</button>
+                <button class="cat-btn" onclick="selectCategory('cinema')">SERIES / TV</button>
+            </div>
+            <button id="close-admin" onclick="toggleDrawer(false)" style="width:100%; margin-top:15px; background:transparent; color:white; border:1px solid #444; padding:10px;">CANCEL</button>
+        </div>
+
+        <div id="admin-step-2" style="display: none;">
+            <h3 id="form-title">NEW ENTRY</h3>
+            <input type="text" id="entry-title" placeholder="TITLE...">
+            <input type="text" id="entry-sub" placeholder="ARTIST / CAST...">
+            <input type="text" id="entry-img" placeholder="IMAGE URL...">
             
-            data[name].forEach(file => {
-                const anchor = document.createElement('a');
-                anchor.className = 'file-link';
-                anchor.href = file.url;
-                anchor.target = '_blank'; // Opens in new tab
-                
-                anchor.innerHTML = `
-                    <div class="file-row">
-                        <span>📄 ${file.name}</span>
-                        <span style="font-size: 0.7rem; border: 1.5px solid black; padding: 2px 8px; border-radius: 4px;">OPEN LINK</span>
+            <div id="album-only-fields" style="display:none;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin: 10px 0;">
+                    <h4 style="font-size:0.8rem; font-weight:900;">TRACKLIST</h4>
+                    <button type="button" onclick="addTrackInput()" style="background:#22c55e; border:none; padding:5px 10px; font-weight:900; cursor:pointer;">+ ADD TRACK</button>
+                </div>
+                <div id="track-input-container" style="max-height: 200px; overflow-y: auto; margin-bottom:10px;"></div>
+                <div style="background:#222; padding:10px; border:1px solid #444; margin-bottom:10px;">
+                    <span style="font-size:0.7rem; opacity:0.6;">AUTO-CALCULATED AVG:</span>
+                    <span id="live-avg" style="font-weight:900; color:#22c55e; float:right;">0</span>
+                </div>
+            </div>
+
+            <input type="number" id="entry-score" placeholder="SCORE (0-100)" min="0" max="100">
+            <textarea id="entry-review" placeholder="YOUR REVIEW / SUMMARY..."></textarea>
+            
+            <div class="admin-btns">
+                <button id="save-btn" style="background: #22c55e; flex: 2; padding: 15px; font-weight: 900; border: none; cursor: pointer;">EXECUTE_UPLOAD</button>
+                <button onclick="resetAdmin()" style="background: #444; flex: 1; border: none; color:white; font-weight: 900; cursor: pointer;">BACK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { albums as initialAlbums, cinema as initialCinema } from './data.js';
+
+    let localAlbums = JSON.parse(localStorage.getItem('vault_albums')) || [];
+    let localCinema = JSON.parse(localStorage.getItem('vault_cinema')) || [];
+    let allAlbums = [...initialAlbums, ...localAlbums];
+    let allCinema = [...initialCinema, ...localCinema];
+    let currentCategory = '';
+
+    // --- UTILS ---
+    function getScoreColor(scoreStr) {
+        const s = parseFloat(scoreStr);
+        if (s >= 90) return "#22c55e";
+        if (s >= 70) return "#eab308";
+        if (s >= 50) return "#f97316";
+        return "#ef4444";
+    }
+
+    function showLoader(cb) {
+        const loader = document.getElementById('loader');
+        const fill = document.getElementById('fill');
+        loader.style.display = 'flex';
+        fill.style.width = '0%';
+        fill.style.animation = 'none';
+        void fill.offsetWidth; 
+        fill.style.animation = 'progress 1.2s ease-in-out forwards';
+        setTimeout(() => { loader.style.display = 'none'; cb(); }, 1200);
+    }
+
+    // --- ADMIN LOGIC ---
+    window.toggleDrawer = (show) => {
+        document.getElementById('admin-drawer').style.display = show ? 'block' : 'none';
+        if(show) resetAdmin();
+    };
+
+    window.selectCategory = (cat) => {
+        currentCategory = cat;
+        document.getElementById('admin-step-1').style.display = 'none';
+        document.getElementById('admin-step-2').style.display = 'block';
+        const isAlb = cat === 'album';
+        document.getElementById('album-only-fields').style.display = isAlb ? 'block' : 'none';
+        document.getElementById('entry-score').readOnly = isAlb;
+        document.getElementById('form-title').innerText = isAlb ? 'NEW ALBUM' : 'NEW CINEMA';
+        if(isAlb) {
+            document.getElementById('track-input-container').innerHTML = '';
+            addTrackInput();
+        }
+    };
+
+    window.addTrackInput = () => {
+        const container = document.getElementById('track-input-container');
+        const div = document.createElement('div');
+        div.className = 'track-input-row';
+        div.innerHTML = `
+            <input type="text" class="t-name" placeholder="Name" oninput="calculateAvg()">
+            <input type="number" class="t-score" placeholder="0-100" oninput="calculateAvg()">
+            <label><input type="checkbox" class="t-exclude" onchange="calculateAvg()"><span>EXCL</span></label>
+            <button onclick="this.parentElement.remove(); calculateAvg();" style="background:red; color:white; border:none; padding:5px;">X</button>
+        `;
+        container.appendChild(div);
+    };
+
+    window.calculateAvg = () => {
+        if (currentCategory !== 'album') return;
+        const rows = document.querySelectorAll('.track-input-row');
+        let total = 0, count = 0;
+        rows.forEach(r => {
+            const s = parseFloat(r.querySelector('.t-score').value);
+            const ex = r.querySelector('.t-exclude').checked;
+            if (!isNaN(s) && !ex) { total += s; count++; }
+        });
+        const avg = count > 0 ? (total / count).toFixed(1) : 0;
+        document.getElementById('live-avg').innerText = avg;
+        document.getElementById('entry-score').value = avg;
+    };
+
+    window.resetAdmin = () => {
+        document.getElementById('admin-step-1').style.display = 'block';
+        document.getElementById('admin-step-2').style.display = 'none';
+        document.querySelectorAll('#admin-step-2 input, #admin-step-2 textarea').forEach(i => i.value = '');
+        document.getElementById('live-avg').innerText = '0';
+    };
+
+    document.getElementById('save-btn').onclick = () => {
+        const newItem = {
+            id: Date.now(),
+            title: document.getElementById('entry-title').value,
+            score: document.getElementById('entry-score').value,
+            img: document.getElementById('entry-img').value || 'https://via.placeholder.com/300',
+            review: document.getElementById('entry-review').value
+        };
+
+        if (currentCategory === 'album') {
+            newItem.artist = document.getElementById('entry-sub').value;
+            newItem.type = "ALBUM";
+            newItem.tracks = Array.from(document.querySelectorAll('.track-input-row')).map(r => ({
+                name: r.querySelector('.t-name').value,
+                rating: r.querySelector('.t-score').value + "/100",
+                excluded: r.querySelector('.t-exclude').checked
+            }));
+            localAlbums.push(newItem);
+            localStorage.setItem('vault_albums', JSON.stringify(localAlbums));
+            allAlbums.push(newItem);
+        } else {
+            newItem.cast = document.getElementById('entry-sub').value;
+            newItem.poster = newItem.img;
+            newItem.type = "CINEMA";
+            localCinema.push(newItem);
+            localStorage.setItem('vault_cinema', JSON.stringify(localCinema));
+            allCinema.push(newItem);
+        }
+        render();
+        toggleDrawer(false);
+    };
+
+    // --- CORE LOGIC ---
+    window.deleteEntry = (e, id, type) => {
+        e.stopPropagation();
+        if (!confirm("Delete?")) return;
+        if (type === 'album') {
+            allAlbums = allAlbums.filter(a => a.id != id);
+            localAlbums = localAlbums.filter(a => a.id != id);
+            localStorage.setItem('vault_albums', JSON.stringify(localAlbums));
+        } else {
+            allCinema = allCinema.filter(c => c.id != id);
+            localCinema = localCinema.filter(c => c.id != id);
+            localStorage.setItem('vault_cinema', JSON.stringify(localCinema));
+        }
+        render();
+    };
+
+    function render() {
+        document.getElementById('album-list').innerHTML = allAlbums.map(a => `
+            <div class="card album-card" data-id="${a.id}">
+                <div class="delete-btn" onclick="deleteEntry(event, '${a.id}', 'album')">X</div>
+                <span class="type-tag">ALBUM</span>
+                <img src="${a.img}">
+                <div class="title-wrapper">
+                    <div class="scroll-text-container">
+                        <h3 class="item-title">${a.title}</h3>
+                        <p class="artist-name">${a.artist}</p>
                     </div>
-                `;
-                list.appendChild(anchor);
-            });
-        }, 400); 
+                    <div class="score-box" style="background:${getScoreColor(a.score)}">${a.score}</div>
+                </div>
+            </div>
+        `).join('');
+
+        document.getElementById('series-list').innerHTML = allCinema.map(c => `
+            <div class="card series-card" data-id="${c.id}">
+                <div class="delete-btn" onclick="deleteEntry(event, '${c.id}', 'cinema')">X</div>
+                <span class="type-tag">CINEMA</span>
+                <img src="${c.poster || c.img}">
+                <div class="title-wrapper">
+                    <div class="scroll-text-container">
+                        <h3 class="item-title">${c.title}</h3>
+                        <p class="artist-name">${c.cast || ''}</p>
+                    </div>
+                    <div class="score-box" style="background:${getScoreColor(c.score)}">${c.score}</div>
+                </div>
+            </div>
+        `).join('');
+
+        document.querySelectorAll('.card').forEach(card => {
+            card.onclick = (e) => {
+                if(!e.target.classList.contains('delete-btn')) 
+                    openModal(card.dataset.id, card.classList.contains('album-card') ? 'album' : 'cinema');
+            };
+        });
     }
 
-    function goBack() { 
-        document.getElementById('dashboard-ui').style.display = 'block'; 
-        document.getElementById('subject-view').style.display = 'none'; 
+    function openModal(id, type) {
+        const item = type === 'album' ? allAlbums.find(a => a.id == id) : allCinema.find(c => c.id == id);
+        if(!item) return;
+        showLoader(() => {
+            const target = document.getElementById('modal-target');
+            if(type === 'album') {
+                target.innerHTML = `
+                    <div style="display:flex; gap:30px; flex-wrap:wrap;">
+                        <img src="${item.img}" style="width:300px; aspect-ratio:1/1; object-fit:cover; border:var(--border);">
+                        <div style="flex:1; min-width:300px;">
+                            <div style="display:flex; justify-content:space-between;">
+                                <div><h1>${item.title}</h1><h2>${item.artist}</h2></div>
+                                <div style="background:black; color:white; padding:10px; font-weight:900;">${item.score}</div>
+                            </div>
+                            <p style="background:#eee; padding:15px; border:var(--border); margin:20px 0;">${item.review || ''}</p>
+                            <h3 style="border-bottom:var(--border);">TRACKS</h3>
+                            ${item.tracks ? item.tracks.map(t => `<div class="track-row"><span>${t.name}</span><strong>${t.rating}</strong></div>`).join('') : ''}
+                        </div>
+                    </div>`;
+            } else {
+                target.innerHTML = `
+                    <div style="display:flex; gap:30px; flex-wrap:wrap;">
+                        <img src="${item.poster || item.img}" style="width:300px; aspect-ratio:11/16; object-fit:cover; border:var(--border);">
+                        <div style="flex:1; min-width:300px;">
+                            <div style="display:flex; justify-content:space-between;">
+                                <h1>${item.title}</h1>
+                                <div style="background:${getScoreColor(item.score)}; color:white; padding:10px; border:var(--border);">${item.score}</div>
+                            </div>
+                            <p><strong>CAST:</strong> ${item.cast || 'N/A'}</p>
+                            <div style="background:black; color:white; padding:20px; margin-top:20px;">
+                                <p style="font-style:italic;">"${item.review || ''}"</p>
+                            </div>
+                        </div>
+                    </div>`;
+            }
+            document.getElementById('overlay').style.display = 'block';
+        });
     }
+
+    document.getElementById('open-admin').onclick = () => toggleDrawer(true);
+    document.getElementById('overlay').onclick = (e) => { if(e.target.id === 'overlay') e.target.style.display = 'none'; };
+
+    render();
 </script>
-
 </body>
 </html>
