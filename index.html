@@ -290,23 +290,7 @@
     flex: 1; background: #222; color: white; border: 1px solid #444; 
     padding: 10px; font-weight: 900; cursor: pointer; opacity: 0.5; 
 }
-.single-card {
-    width: 160px; /* Slimmer than album cards */
-    background: var(--white);
-    border: var(--border);
-}
-
-.single-card img {
-    width: 100%;
-    aspect-ratio: 1/1;
-    filter: sepia(0.2); /* Slight vintage filter for singles */
-}
-
-/* A special tag color for singles */
-.tag-single {
-    background: #ec4899 !important; /* Hot Pink */
-}
-
+.status-btn.active { opacity: 1; border: 2px solid #22c55e; color: #22c55e; }
 
     </style>
     <link rel="manifest" href="manifest.json">
@@ -347,12 +331,6 @@
         <h2 class="section-title">Albums</h2>
         <div class="scroll-container" id="album-list"></div>
     </section>
-    
-    <section>
-        <h2 class="section-title">Singles</h2>
-        <div class="scroll-container" id="singles-list"></div>
-    </section>
-
 
     <section>
         <h2 class="section-title">Series & Movies</h2>
@@ -381,10 +359,8 @@
         <div id="admin-step-1">
             <h3 style="text-align: center; margin-bottom: 20px;">SELECT CATEGORY</h3>
             <div style="display: flex; gap: 15px;">
-                <button class="cat-btn" onclick="selectCategory('album')">ALBUMS</button>
+                <button class="cat-btn" onclick="selectCategory('album')">ALBUMS / SONGS</button>
                 <button class="cat-btn" onclick="selectCategory('cinema')">SERIES / TV</button>
-                <button class="cat-btn" onclick="selectCategory('single')">SINGLE TRACK</button>
-
             </div>
             <button id="close-admin" onclick="toggleDrawer(false)" style="width:100%; margin-top:15px; background:transparent; color:white; border:1px solid #444; padding:10px;">CANCEL</button>
         </div>
@@ -555,25 +531,6 @@
                     </div>
                 </div>`;
         }).join('');
-        // Inside your render function
-        let localSingles = JSON.parse(localStorage.getItem('vault_singles')) || [];
-
-        document.getElementById('singles-list').innerHTML = localSingles.map(s => `
-            <div class="card single-card" onclick="openModal('${s.id}', 'single')">
-                <div class="delete-btn" onclick="deleteEntry(event, '${s.id}', 'single')">X</div>
-                <span class="type-tag tag-single">SINGLE</span>
-                <img src="${s.img}">
-                <div class="title-wrapper">
-                    <div style="flex: 1; overflow: hidden;">
-                        <div class="scroll-text-container">
-                            <h3 class="item-title" style="font-size: 0.8rem;">${s.title}</h3>
-                        </div>
-                        <p class="artist-name">${s.artist || ''}</p>
-                    </div>
-                    <div class="score-box" style="font-size: 0.7rem; padding: 3px 5px;">${s.score}</div>
-                </div>
-            </div>
-        `).join('');
 
         // Render Cinema
         document.getElementById('series-list').innerHTML = allCinema.map(c => {
@@ -706,27 +663,12 @@
     };
 
     window.selectCategory = (cat) => {
-    window.currentCategory = cat;
-    document.getElementById('admin-step-1').style.display = 'none';
-    document.getElementById('admin-step-2').style.display = 'block';
-    
-    // Fix the title text based on category
-    const titleMap = {
-        'album': 'NEW ALBUM',
-        'cinema': 'NEW CINEMA',
-        'single': 'NEW SINGLE'
+        window.currentCategory = cat;
+        document.getElementById('admin-step-1').style.display = 'none';
+        document.getElementById('admin-step-2').style.display = 'block';
+        document.getElementById('form-title').innerText = cat === 'album' ? 'NEW ALBUM' : 'NEW CINEMA';
+        document.getElementById('album-only-fields').style.display = cat === 'album' ? 'block' : 'none';
     };
-    document.getElementById('form-title').innerText = titleMap[cat];
-
-    // Show/Hide specific fields
-    // Albums and Singles both need the "Artist" sub-field
-    const isMusic = (cat === 'album' || cat === 'single');
-    document.getElementById('album-only-fields').style.display = (cat === 'album') ? 'block' : 'none';
-    
-    // Ensure the sub-placeholder changes
-    document.getElementById('entry-sub').placeholder = isMusic ? "ARTIST NAME..." : "CAST / DIRECTOR...";
-};
-
 
     window.setEntryStatus = (status) => {
         window.currentStatus = status;
@@ -767,8 +709,7 @@
     const score = document.getElementById('entry-score').value || 0;
     
     if (!title) return alert("Title required");
-    
-    
+
     const newEntry = {
         id: Date.now().toString(),
         title: title,
@@ -791,17 +732,6 @@
         newEntry.cast = subText;
         newEntry.poster = newEntry.img;
     }
-    // Inside your save-btn.onclick
-    // Inside your save-btn.onclick
-if (window.currentCategory === 'single') {
-    newEntry.artist = document.getElementById('entry-sub').value;
-    // Add to the singles list
-    let localSingles = JSON.parse(localStorage.getItem('vault_singles')) || [];
-    localSingles.push(newEntry);
-    localStorage.setItem('vault_singles', JSON.stringify(localSingles));
-}
-
-
 
     if (window.currentStatus === 'upcoming') {
         localUpcoming.push(newEntry);
