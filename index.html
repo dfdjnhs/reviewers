@@ -112,6 +112,35 @@
 .elite-modal .track-row {
     border-bottom: 1px solid rgba(0,0,0,0.2);
 }
+.rank-row {
+    display: flex;
+    align-items: center;
+    background: var(--white);
+    border: var(--border);
+    padding: 15px;
+    gap: 20px;
+    box-shadow: 4px 4px 0 var(--black);
+    transition: 0.2s var(--ease);
+}
+.rank-row:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--black); }
+
+.rank-number {
+    font-size: 1.5rem;
+    font-weight: 900;
+    width: 40px;
+    font-style: italic;
+}
+
+.rank-img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border: 2px solid var(--black);
+}
+
+.rank-info { flex: 1; }
+.rank-info h4 { font-weight: 900; text-transform: uppercase; line-height: 1; }
+.rank-info p { font-size: 0.8rem; opacity: 0.6; font-weight: 700; }
 
     </style>
     <link rel="manifest" href="manifest.json">
@@ -132,19 +161,32 @@
 </div>
 
 <header>
-    <h1 style="font-weight: 900; font-size: 3.5rem; letter-spacing: -3px;">THE VAULT.</h1>
+    <div style="display:flex; flex-direction:column;">
+        <h1 style="font-weight: 900; font-size: 3.5rem; letter-spacing: -3px;">THE VAULT.</h1>
+        <nav style="margin-top:10px; display:flex; gap:20px;">
+            <button onclick="showPage('home')" style="background:none; border:none; font-weight:900; cursor:pointer; text-transform:uppercase; font-size:0.8rem; border-bottom:2px solid black;">Vault</button>
+            <button onclick="showPage('rankings')" style="background:none; border:none; font-weight:900; cursor:pointer; text-transform:uppercase; font-size:0.8rem; opacity:0.5;" id="rank-nav">Rankings</button>
+        </nav>
+    </div>
     <button class="admin-toggle" id="open-admin">Add Entry</button>
 </header>
 
-<section>
-    <h2 class="section-title">Albums</h2>
-    <div class="scroll-container" id="album-list"></div>
-</section>
+<div id="page-home">
+    <section>
+        <h2 class="section-title">Albums</h2>
+        <div class="scroll-container" id="album-list"></div>
+    </section>
+    <section>
+        <h2 class="section-title">Series & Movies</h2>
+        <div class="scroll-container" id="series-list"></div>
+    </section>
+</div>
 
-<section>
-    <h2 class="section-title">Series & Movies</h2>
-    <div class="scroll-container" id="series-list"></div>
-</section>
+<div id="page-rankings" style="display:none; padding: 20px 5%;">
+    <h2 class="section-title" style="margin-left:0;">GLOBAL RANKINGS</h2>
+    <div id="rankings-container" style="display: flex; flex-direction: column; gap: 15px;">
+        </div>
+</div>
 
 <div id="overlay">
     <div class="modal-content" id="modal-target"></div>
@@ -320,6 +362,54 @@
         }
         render();
     };
+// --- PAGE SWITCHING ---
+window.showPage = function(pageId) {
+    document.getElementById('page-home').style.display = pageId === 'home' ? 'block' : 'none';
+    document.getElementById('page-rankings').style.display = pageId === 'rankings' ? 'block' : 'none';
+    
+    // Style nav buttons
+    const navs = document.querySelectorAll('nav button');
+    navs[0].style.opacity = pageId === 'home' ? '1' : '0.5';
+    navs[0].style.borderBottom = pageId === 'home' ? '2px solid black' : 'none';
+    navs[1].style.opacity = pageId === 'rankings' ? '1' : '0.5';
+    navs[1].style.borderBottom = pageId === 'rankings' ? '2px solid black' : 'none';
+
+    if (pageId === 'rankings') renderRankings();
+};
+
+// --- RENDER RANKINGS ---
+function renderRankings() {
+    const container = document.getElementById('rankings-container');
+    
+    // Combine both lists and sort by score descending
+    const allItems = [...allAlbums, ...allCinema].sort((a, b) => parseFloat(b.score) - parseFloat(a.score));
+    
+    container.innerHTML = allItems.map((item, index) => {
+        const isElite = parseFloat(item.score) >= 94;
+        const scoreColor = getScoreColor(item.score);
+        
+        return `
+            <div class="rank-row ${isElite ? 'elite-card' : ''}" onclick="openModal('${item.id}', '${item.type === 'ALBUM' ? 'album' : 'cinema'}')">
+                <div class="rank-number">#${index + 1}</div>
+                <img src="${item.img || item.poster}" class="rank-img">
+                <div class="rank-info">
+                    <h4>${item.title}</h4>
+                    <p>${item.artist || item.cast || ''} • ${item.type}</p>
+                </div>
+                <div class="score-box" style="background:${scoreColor}">${item.score}</div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Ensure renderRankings is called whenever a new entry is saved
+const originalSave = document.getElementById('save-btn').onclick;
+document.getElementById('save-btn').onclick = () => {
+    originalSave(); // Execute existing save logic
+    if (document.getElementById('page-rankings').style.display === 'block') {
+        renderRankings();
+    }
+};
 
             function render() {
         // Render Albums
