@@ -366,6 +366,13 @@
             </div>
             <button id="close-admin" onclick="toggleDrawer(false)" style="width:100%; margin-top:15px; background:transparent; color:white; border:1px solid #444; padding:10px;">CANCEL</button>
         </div>
+<div style="margin-top: 20px; border-top: 1px solid #444; padding-top: 10px;">
+    <p style="font-size: 10px; color: #888; margin-bottom: 5px;">DATA TRANSFER</p>
+    <div style="display: flex; gap: 10px;">
+        <button onclick="exportVaultData()" style="flex:1; background:#3b82f6; color:white; border:none; padding:10px; font-weight:900; cursor:pointer;">EXPORT DATA</button>
+        <button onclick="importVaultData()" style="flex:1; background:#a855f7; color:white; border:none; padding:10px; font-weight:900; cursor:pointer;">IMPORT DATA</button>
+    </div>
+</div>
 
 <div id="admin-step-2" style="display: none;">
     <h3 id="form-title">NEW ENTRY</h3>
@@ -574,6 +581,52 @@ if (localUpcoming.length > 0) {
                 </div>`;
         }).join('');
     }
+    
+window.exportVaultData = function() {
+    const data = {
+        albums: localStorage.getItem('vault_albums'),
+        cinema: localStorage.getItem('vault_cinema'),
+        singles: localStorage.getItem('vault_singles'),
+        upcoming: localStorage.getItem('vault_upcoming')
+    };
+    
+    const dataStr = JSON.stringify(data);
+    const blob = new Blob([dataStr], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = "the_vault_backup.json";
+    link.click();
+};
+
+window.importVaultData = function() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    
+    input.onchange = e => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.readAsText(file, 'UTF-8');
+        
+        reader.onload = readerEvent => {
+            const content = JSON.parse(readerEvent.target.result);
+            
+            if(confirm("This will overwrite your current preview data. Proceed?")) {
+                if(content.albums) localStorage.setItem('vault_albums', content.albums);
+                if(content.cinema) localStorage.setItem('vault_cinema', content.cinema);
+                if(content.singles) localStorage.setItem('vault_singles', content.singles);
+                if(content.upcoming) localStorage.setItem('vault_upcoming', content.upcoming);
+                
+                alert("Import Successful! Reloading...");
+                location.reload();
+            }
+        };
+    };
+    input.click();
+};
+
 
     // 6. Ranking Page Render
     window.renderSpecificRankings = function(type) {
