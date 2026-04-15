@@ -417,6 +417,105 @@
     padding: 10px; font-weight: 900; cursor: pointer; opacity: 0.5; 
 }
 .status-btn.active { opacity: 1; border: 2px solid #22c55e; color: #22c55e; }
+/* Locked Editor Styles */
+.editor-wrapper {
+    background: #111; 
+    padding: 20px;
+    height: 85vh; /* Locks the outer wrapper height */
+    display: flex;
+    flex-direction: column;
+    border: var(--border);
+}
+/* Slim Editor Styles */
+
+.editor-toolbar {
+    position: sticky;
+    top: 0;
+    background: var(--white);
+    padding: 8px;
+    display: flex;
+    gap: 8px;
+    z-index: 100;
+    margin-bottom: 15px;
+    border: var(--border);
+    justify-content: center;
+}
+
+.toolbar-btn {
+    background: #eee;
+    border: 1px solid var(--black);
+    font-weight: 900;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-size: 11px;
+}
+
+.editor-paper {
+    background: var(--white);
+    max-width: 700px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 30px;
+    border: var(--border);
+    box-shadow: 8px 8px 0 var(--black);
+    
+    /* THE FIX: Fixed height with internal scroll */
+    height: 100%; 
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Prevents the paper itself from growing */
+}
+
+#ch-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 900;
+    width: 100%;
+    border: none;
+    border-bottom: 2px solid var(--black);
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+    outline: none;
+    flex-shrink: 0; /* Prevents title from squishing */
+}
+
+#writing-board {
+    outline: none;
+    font-size: 1rem;
+    line-height: 1.6;
+    font-family: 'Inter', sans-serif;
+    color: #222;
+    
+    /* THE FIX: Allows text to scroll inside this div only */
+    flex-grow: 1;
+    overflow-y: auto; 
+    padding-right: 10px; /* Space for the scrollbar */
+}
+
+/* Optional: Style the internal scrollbar to match the vibe */
+#writing-board::-webkit-scrollbar {
+    width: 8px;
+}
+#writing-board::-webkit-scrollbar-thumb {
+    background: var(--black);
+}
+#chapter-list::-webkit-scrollbar {
+    width: 10px;
+    border-left: var(--border);
+}
+
+#chapter-list::-webkit-scrollbar-thumb {
+    background: var(--black);
+}
+
+#chapter-list .track-row:last-child {
+    border-bottom: none;
+}
+
+#chapter-list .track-row:hover {
+    background: #fff;
+}
+
 
     </style>
     <link rel="manifest" href="manifest.json">
@@ -440,6 +539,8 @@
     <button onclick="showPage('home')" class="nav-btn active" id="nav-home">THE VAULT</button>
     <button onclick="showPage('rank-albums')" class="nav-btn" id="nav-rank-albums">ALBUM RANKINGS</button>
     <button onclick="showPage('rank-series')" class="nav-btn" id="nav-rank-series">SERIES RANKINGS</button>
+    <button onclick="showPage('scripts')" class="nav-btn" id="nav-scripts">FANFICS</button>
+
 </nav>
 
 
@@ -447,14 +548,13 @@
     <button class="admin-toggle" id="open-admin">Add Entry</button>
 </header>
 
-<section id="upcoming-section" style="display:none;">
-    <h2 class="section-title">Coming Soon</h2>
-    <div class="conveyor-belt-track">
-        <div class="conveyor-belt-inner" id="upcoming-list">
-            </div>
-    </div>
-</section>
-
+<div id="page-home" class="page-view">
+    <section id="upcoming-section" style="display:none;">
+        <h2 class="section-title">Coming Soon</h2>
+        <div class="conveyor-belt-track">
+            <div class="conveyor-belt-inner" id="upcoming-list"></div>
+        </div>
+    </section>
 
     <section>
         <h2 class="section-title">Albums</h2>
@@ -476,8 +576,13 @@
     <h2 class="section-title" style="margin-left:0;">SERIES LEADERBOARD</h2>
     <div id="series-rank-container" style="display: flex; flex-direction: column; gap: 15px;"></div>
 </div>
-
-
+<div id="page-scripts" class="page-view" style="display:none; padding: 20px 5%;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2 class="section-title" style="margin:0;">FAN FICTIONS</h2>
+        <button onclick="openStoryCreator()" class="admin-toggle" style="background:#22c55e;">+ NEW STORY</button>
+    </div>
+    <div class="scroll-container" id="story-list"></div>
+</div>
 
 <div id="overlay">
     <div class="modal-content" id="modal-target"></div>
@@ -548,6 +653,9 @@
     let localAlbums = JSON.parse(localStorage.getItem('vault_albums')) || [];
     let localCinema = JSON.parse(localStorage.getItem('vault_cinema')) || [];
     let localUpcoming = JSON.parse(localStorage.getItem('vault_upcoming')) || [];
+    // Add this near the other "let local..." lines
+    let localStories = JSON.parse(localStorage.getItem('vault_stories')) || [];
+
     
     // Combine for global use
     let allAlbums = [...initialAlbums, ...localAlbums];
@@ -696,6 +804,19 @@ if (localUpcoming.length > 0) {
                     </div>
                 </div>`;
         }).join('');
+        function renderStories() {
+    const list = document.getElementById('story-list');
+    if(!list) return;
+    
+    list.innerHTML = localStories.map(s => `
+        <div class="card" onclick="openStoryFolder('${s.id}')" style="background:#fffbeb; border-style:double;">
+            <div class="delete-btn" onclick="event.stopPropagation(); deleteStory('${s.id}')">X</div>
+            <span class="type-tag" style="background:#d97706;">SCRIPT</span>
+            <h3 style="font-family:'Lora'; font-size:1.4rem;">${s.title}</h3>
+            <p style="font-size:0.7rem; margin-top:5px; opacity:0.6;">${s.chapters.length} CHAPTERS</p>
+        </div>
+    `).join('');
+}
 
         // Render Cinema
         document.getElementById('series-list').innerHTML = allCinema.map(c => {
@@ -717,6 +838,21 @@ if (localUpcoming.length > 0) {
                 </div>`;
         }).join('');
     }
+
+    const storyList = document.getElementById('story-list');
+    if (storyList) {
+        storyList.innerHTML = localStories.map(s => `
+            <div class="card" onclick="openStoryFolder('${s.id}')">
+                <div class="delete-btn" onclick="event.stopPropagation(); deleteStory('${s.id}')">X</div>
+                <span class="type-tag">SCRIPT</span>
+                <h3>${s.title}</h3>
+                <p>${s.chapters.length} Chapters</p>
+            </div>
+        `).join('');
+    }
+
+
+
     
 window.exportVaultData = function() {
     const data = {
@@ -763,32 +899,222 @@ window.importVaultData = function() {
     input.click();
 };
 
+window.openStoryCreator = () => {
+    const target = document.getElementById('modal-target');
+    target.innerHTML = `
+        <h3>INITIALIZE SCRIPT</h3>
+        <input type="text" id="story-title" placeholder="STORY TITLE..." style="width:100%; padding:10px; margin:10px 0; border:var(--border);">
+        <textarea id="story-desc" placeholder="SYNOPSIS..." style="width:100%; height:100px; padding:10px; border:var(--border);"></textarea>
+        <button onclick="saveNewStory()" style="width:100%; background:var(--black); color:white; padding:15px; font-weight:900; border:none; margin-top:10px; cursor:pointer;">CREATE FOLDER</button>
+    `;
+    document.getElementById('overlay').style.display = 'flex';
+};
+window.saveChapter = (storyId) => {
+    // 1. Grab the data from the editor fields
+    const titleInput = document.getElementById('ch-title');
+    const board = document.getElementById('writing-board');
+    
+    if (!titleInput || !board) return;
+
+    const title = titleInput.value.trim() || "UNTITLED_PART";
+    const content = board.innerHTML; // Using innerHTML to keep your bold/italic styling
+
+    // 2. Find the specific story in your local array
+    const storyIndex = localStories.findIndex(s => s.id === storyId);
+
+    if (storyIndex === -1) {
+        alert("ERROR: STORY_NOT_FOUND");
+        return;
+    }
+
+    // 3. Create the chapter object
+    const newChapter = {
+        title: title,
+        content: content,
+        timestamp: new Date().toISOString()
+    };
+
+    // 4. Push to the array and LOCK IT into LocalStorage
+    localStories[storyIndex].chapters.push(newChapter);
+    localStorage.setItem('vault_stories', JSON.stringify(localStories));
+
+    // 5. Provide feedback and return to the folder view
+    console.log("CHAPTER_SAVED_SUCCESSFULLY");
+    window.openStoryFolder(storyId); 
+    render(); // Refresh the main page counts
+};
+
+window.saveNewStory = () => {
+    const title = document.getElementById('story-title').value;
+    const desc = document.getElementById('story-desc').value;
+    
+    if (!title) {
+        alert("Title required!");
+        return;
+    }
+
+    const newStory = {
+        id: "fic_" + Date.now(),
+        title: title,
+        desc: desc,
+        chapters: [] // This starts empty
+    };
+
+    localStories.push(newStory);
+    localStorage.setItem('vault_stories', JSON.stringify(localStories));
+    
+    // Close modal and refresh the UI
+    document.getElementById('overlay').style.display = 'none';
+    render(); 
+};
+
+// Opens the list of chapters for a specific story
+window.openStoryFolder = (storyId) => {
+    const story = localStories.find(s => s.id == storyId);
+    if(!story) return;
+    
+    const target = document.getElementById('modal-target');
+    
+    // Apply Elite Modal styling if it has many chapters, otherwise standard
+    target.className = 'modal-content'; 
+    
+    target.innerHTML = `
+        <div style="font-family:'Inter', sans-serif; padding: 10px;">
+            <div style="border-bottom: var(--border); padding-bottom: 15px; margin-bottom: 20px;">
+                <span class="type-tag" style="background:#d97706; margin-bottom:10px;">FANFICTION</span>
+                <h1 style="font-size: 2.5rem; font-weight: 900; line-height: 0.9; text-transform: uppercase; letter-spacing: -1px;">
+                    ${story.title}
+                </h1>
+                <p style="margin-top: 10px; font-weight: 700; opacity: 0.7; font-size: 0.9rem;">
+                    ${story.desc || 'No sypnosis available.'}
+                </p>
+            </div>
+            
+            <h3 style="font-size: 0.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; opacity: 0.5;">${story.chapters.length} Chapters
+            </h3>
+            
+            <div id="chapter-list" style="max-height: 300px; overflow-y: auto; margin-bottom: 20px; border: var(--border); background: #f9f9f9;">
+                ${story.chapters.length === 0 ? 
+                    `<div style="padding:40px; text-align:center; font-weight:900; opacity:0.3;">No chapters yet.</div>` : 
+                    story.chapters.map((ch, index) => `
+                    <div class="track-row" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000;">
+                        <div style="display:flex; flex-direction:column;">
+                            <span style="font-size: 0.7rem; font-weight: 900; opacity: 0.5;">Chapter ${(index + 1).toString().padStart(2, '0')}</span>
+                            <span style="font-weight: 900; text-transform: uppercase;">${ch.title}</span>
+                        </div>
+                        <button onclick="readChapter('${storyId}', ${index})" class="admin-toggle" style="padding: 5px 15px; font-size: 10px;">Read</button>
+                    </div>
+                `).join('')}
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+                <button onclick="openEditor('${storyId}')" class="cat-btn" style="padding: 15px; font-size: 0.8rem; flex: 2;">
+                    + NEW CHAPTER
+                </button>
+                <button onclick="document.getElementById('overlay').style.display='none'" class="cat-btn" style="padding: 15px; font-size: 0.8rem; flex: 1; background: #444; color: white;">
+                    Close
+                </button>
+            </div>
+        </div>
+    `;
+    document.getElementById('overlay').style.display = 'flex';
+};
+
+
+// Displays the actual text of the chapter
+window.readChapter = (storyId, index) => {
+    const story = localStories.find(s => s.id == storyId);
+    const chapter = story.chapters[index];
+    const target = document.getElementById('modal-target');
+    
+    // 1. Reset class to match the Brutalist aesthetic
+    target.className = 'modal-content'; 
+    
+    target.innerHTML = `
+        <div class="editor-wrapper" style="height: 85vh; display: flex; flex-direction: column;">
+            <div style="display:flex; justify-content:space-between; align-items:center; max-width:700px; width:100%; margin: 0 auto 10px auto; flex-shrink: 0;">
+                <button onclick="openStoryFolder('${storyId}')" class="admin-toggle" style="padding: 4px 12px; font-size: 11px;">← BACK_TO_FOLDER</button>
+                <span class="type-tag" style="background: var(--black); color: white;">Reading Chapter ${(index + 1).toString().padStart(2, '0')}</span>
+            </div>
+
+            <div class="editor-paper" style="height: 100%; display: flex; flex-direction: column; overflow: hidden;">
+                <h1 style="font-family: 'Inter', sans-serif; font-size: 1.5rem; font-weight: 900; text-transform: uppercase; border-bottom: 4px solid var(--black); margin-bottom: 15px; padding-bottom: 5px; flex-shrink: 0;">
+                    ${chapter.title}
+                </h1>
+                
+                <div id="reader-board" style="flex-grow: 1; overflow-y: auto; font-size: 1.1rem; line-height: 1.8; font-family: 'Inter', sans-serif; color: #222; padding-right: 10px;">
+                    ${chapter.content}
+                </div>
+                
+                <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #ccc; font-size: 10px; font-weight: 900; opacity: 0.5; flex-shrink: 0;">
+                    End of Chapter ${(index + 1).toString().padStart(2, '0')}
+                </div>
+            </div>
+        </div>
+    `;
+};
+
+window.openEditor = (storyId) => {
+    const target = document.getElementById('modal-target');
+    target.innerHTML = `
+        <div class="editor-wrapper">
+            <div style="display:flex; justify-content:space-between; align-items:center; max-width:700px; width:100%; margin: 0 auto 10px auto;">
+                <button onclick="openStoryFolder('${storyId}')" class="admin-toggle" style="padding: 4px 12px; font-size: 11px;">← EXIT</button>
+                <button onclick="saveChapter('${storyId}')" class="admin-toggle" style="background:#22c55e;">Save</button>
+
+            </div>
+
+            <div class="editor-paper">
+                <div class="editor-toolbar" style="flex-shrink:0;">
+                    <button class="toolbar-btn" onclick="document.execCommand('bold')">B</button>
+                    <button class="toolbar-btn" onclick="document.execCommand('italic')">I</button>
+                    <button class="toolbar-btn" onclick="document.execCommand('underline')">U</button>
+                    <button class="toolbar-btn" onclick="document.execCommand('justifyLeft')">L</button>
+                    <button class="toolbar-btn" onclick="document.execCommand('justifyCenter')">C</button>
+                </div>
+
+                <input type="text" id="ch-title" placeholder="CHAPTER TITLE...">
+                
+                <div id="writing-board" contenteditable="true" placeholder="Start typing..."></div>
+                
+            </div>
+        </div>
+    `;
+};
+
+window.exec = (cmd) => document.execCommand(cmd, false, null);
 
     // 6. Ranking Page Render
     window.renderSpecificRankings = function(type) {
-        const containerId = type === 'album' ? 'album-rank-container' : 'series-rank-container';
-        const data = type === 'album' ? allAlbums : allCinema;
-        const topId = getTopId(data);
-        const sorted = [...data].sort((a, b) => parseFloat(b.score) - parseFloat(a.score));
+    const containerId = type === 'album' ? 'album-rank-container' : 'series-rank-container';
+    const data = type === 'album' ? allAlbums : allCinema;
+    
+    // Sort by score (Highest first)
+    const sorted = [...data].sort((a, b) => parseFloat(b.score) - parseFloat(a.score));
+    const topId = sorted.length > 0 ? sorted[0].id : null;
+    
+    document.getElementById(containerId).innerHTML = sorted.map((item, index) => {
+        const isTop = item.id === topId;
+        const isElite = parseFloat(item.score) >= 94;
+        const specialClass = isTop ? 'champion-card' : (isElite ? 'elite-card' : '');
         
-        document.getElementById(containerId).innerHTML = sorted.map((item, index) => {
-            const isTop = item.id === topId;
-            const isElite = parseFloat(item.score) >= 94;
-            const specialClass = isTop ? 'champion-card' : (isElite ? 'elite-card' : '');
+        // Use poster if img doesn't exist (compatibility fix)
+        const displayImg = item.img || item.poster || 'https://via.placeholder.com/150';
 
-            return `
-                <div class="rank-row ${specialClass}">
-                    <div class="rank-number">${isTop ? '👑' : '#' + (index + 1)}</div>
-                    <img src="${item.img || item.poster}" class="rank-img">
-                    <div class="rank-info">
-                        <h4 style="font-weight:900;">${item.title}</h4>
-                        <p>${item.artist || item.cast || ''}</p>
-                    </div>
-                    <div class="score-box" style="background:${isTop ? 'white' : getScoreColor(item.score)}; color:${isTop ? '#2563eb' : 'white'}">${item.score}</div>
+        return `
+            <div class="rank-row ${specialClass}" onclick="openModal('${item.id}', '${type}')" style="cursor:pointer">
+                <div class="rank-number">${isTop ? '👑' : '#' + (index + 1)}</div>
+                <img src="${displayImg}" class="rank-img">
+                <div class="rank-info">
+                    <h4 style="font-weight:900;">${item.title}</h4>
+                    <p>${item.artist || item.cast || ''}</p>
                 </div>
-            `;
-        }).join('');
-    }
+                <div class="score-box" style="background:${isTop ? 'white' : getScoreColor(item.score)}; color:${isTop ? '#2563eb' : 'white'}">${item.score}</div>
+            </div>
+        `;
+    }).join('');
+}
+
 
     // 7. Consolidated Modal Function
     window.openModal = function(id, type) {
@@ -970,6 +1296,20 @@ window.importVaultData = function() {
         }
         location.reload();
     };
+    window.deleteStory = (id) => {
+    // 1. Ask for confirmation so you don't delete by accident
+    if(!confirm("Erase this Story? All existing chapters will be lost after erasing.")) return;
+
+    // 2. Filter the array to remove the specific ID
+    localStories = localStories.filter(s => s.id !== id);
+
+    // 3. Update LocalStorage immediately
+    localStorage.setItem('vault_stories', JSON.stringify(localStories));
+
+    // 4. Refresh the UI
+    render();
+};
+
 
     window.deleteEntry = (event, id, type) => {
         event.stopPropagation();
