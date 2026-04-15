@@ -22,18 +22,130 @@
         section { margin: 50px 0; }
         .section-title { font-size: 2.5rem; font-weight: 900; margin-left: 5%; margin-bottom: 20px; text-transform: uppercase; }
         
-        .scroll-container { display: flex; overflow-x: auto; padding: 20px 5%; gap: 20px; scroll-snap-type: x mandatory; scrollbar-width: none; }
-        .scroll-container::-webkit-scrollbar { display: none; }
-        
-        .card { flex: 0 0 auto; scroll-snap-align: start; background: var(--white); border: var(--border); padding: 12px; box-shadow: 6px 6px 0 var(--black); transition: 0.3s var(--ease); cursor: pointer; position: relative; }
-        .card:hover { transform: translate(-4px, -4px); box-shadow: 10px 10px 0 var(--black); }
-        .card:active { transform: scale(0.98); }
+/* 1. Change Scroll to Grid */
+/* This fixes the tiny album cards */
+.scroll-container {
+    display: grid !important; /* Force grid back */
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)) !important;
+    width: 100%;
+    gap: 30px;
+    padding: 20px 5%;
+}
 
-        .album-card { width: 250px; }
-        .album-card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border: var(--border); }
-        .series-card { width: 230px; } 
-        .series-card img { width: 100%; aspect-ratio: 11/16; object-fit: cover; border: var(--border); }
-        
+/* This keeps the belt separate and moving */
+.conveyor-belt-track {
+    width: 100vw;
+    overflow: hidden;
+    position: relative;
+    padding: 30px 0;
+    /* --- NEW BACKGROUND STYLES --- */
+    background-color: #111; /* Dark charcoal */
+    background-image: radial-gradient(#333 1px, transparent 1px);
+    background-size: 20px 20px; /* Creates a subtle dot grid */
+    border-top: var(--border);
+    border-bottom: var(--border);
+    margin: 20px 0 40px 0;
+    box-shadow: inset 0 10px 20px rgba(0,0,0,0.5); /* Depth effect */
+}
+
+
+.conveyor-belt-inner {
+    display: flex;
+    gap: 25px;
+    width: max-content;
+    animation: scroll-belt 20s linear infinite; /* Slowed down to 30s */
+}
+
+/* 2. Standardize Card Sizes */
+.card { 
+    width: 100% !important; /* Forces cards to respect the grid cell size */
+    background: var(--white); 
+    border: var(--border); 
+    padding: 12px; 
+    box-shadow: 6px 6px 0 var(--black); 
+    transition: 0.3s var(--ease); 
+    cursor: pointer; 
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 3. Handle Images in Grid */
+.card img { 
+    width: 100%; 
+    object-fit: cover; 
+    border: var(--border); 
+}
+
+/* Specific Ratios */
+.album-card img, .upcoming-card img, .single-card img { 
+    aspect-ratio: 1/1; 
+}
+
+.series-card img { 
+    aspect-ratio: 11/16; /* Keeps the movie poster shape */
+}
+
+/* 4. Responsive Tweak for Mobile */
+@media (max-width: 600px) {
+    .scroll-container {
+        grid-template-columns: repeat(2, 1fr); /* 2 columns on small screens */
+        gap: 15px;
+    }
+    .section-title {
+        font-size: 1.8rem;
+    }
+}
+/* Keep the upcoming cards small and consistent for the belt */
+/* Force the Upcoming cards to be shorter and cleaner */
+.upcoming-card-belt {
+    flex: 0 0 180px !important; 
+    width: 140px !important;
+    height: 240px !important; /* Shorter height so they don't look like towers */
+    padding: 8px !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+.upcoming-card-belt img {
+    width: 100% !important;
+    height: 160px !important; /* Fixes the image size */
+    object-fit: cover;
+    margin-bottom: 5px;
+    border: var(--border);
+}
+
+/* Fix the timer tag position for these smaller cards */
+.upcoming-card-belt .timer-tag {
+    position: absolute;
+    bottom: 55px; /* Adjust this so it sits on the image */
+    left: 5px;
+    font-size: 7px;
+    padding: 2px 4px;
+}
+
+/* 1. The Animation Keyframes */
+@keyframes scroll-belt {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); } /* Moves halfway because we doubled the content */
+}
+
+/* 2. Apply it to the Inner Container */
+
+
+/* 3. Pause when you hover so you can click a card */
+.conveyor-belt-track:hover .conveyor-belt-inner {
+    animation-play-state: paused;
+}
+
+/* 4. Hide the scrollbar for a cleaner look */
+.conveyor-belt-track::-webkit-scrollbar {
+    display: none;
+}
+
+
+
         .type-tag { font-size: 10px; font-weight: 900; text-transform: uppercase; background: var(--black); color: white; padding: 2px 6px; display: inline-block; margin-bottom: 8px; }
         
         .title-wrapper { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-top: 10px; overflow: hidden; }
@@ -252,7 +364,19 @@
     /* Keep content visible above the shine */
     .champion-modal > * { position: relative; z-index: 2; }
     /* UPCOMING SECTION STYLES */
-#upcoming-section { margin-top: 50px; }
+#upcoming-section 
+.section-title {
+    margin-bottom: 10px;
+    color: var(--black);
+    /* Optional: give it a "Breaking News" look */
+    display: inline-block;
+    background: #fde047; /* Yellow */
+    padding: 5px 15px;
+    border: var(--border);
+    transform: rotate(-1deg);
+    margin-left: 5%;
+}
+
 .upcoming-card { 
     flex: 0 0 auto; /* Prevents shrinking/growing */
     width: 200px;  /* Define a set width like your other cards */
@@ -311,7 +435,7 @@
 
 <header>
     <div style="display:flex; flex-direction:column;">
-        <h1 style="font-weight: 900; font-size: 3.5rem; letter-spacing: -3px;">THE VAULT.</h1>
+        <h1 style="font-weight: 900; font-size: 3.5rem; letter-spacing: -3px;">MUSIC.</h1>
 <nav style="margin-top:10px; display:flex; gap:15px; overflow-x: auto; white-space: nowrap; padding-bottom: 5px;">
     <button onclick="showPage('home')" class="nav-btn active" id="nav-home">THE VAULT</button>
     <button onclick="showPage('rank-albums')" class="nav-btn" id="nav-rank-albums">ALBUM RANKINGS</button>
@@ -323,11 +447,14 @@
     <button class="admin-toggle" id="open-admin">Add Entry</button>
 </header>
 
-<div id="page-home" class="page-view">
-    <section id="upcoming-section" style="display:none;">
-        <h2 class="section-title">Coming Soon</h2>
-        <div class="scroll-container" id="upcoming-list"></div>
-    </section>
+<section id="upcoming-section" style="display:none;">
+    <h2 class="section-title">Coming Soon</h2>
+    <div class="conveyor-belt-track">
+        <div class="conveyor-belt-inner" id="upcoming-list">
+            </div>
+    </div>
+</section>
+
 
     <section>
         <h2 class="section-title">Albums</h2>
@@ -521,24 +648,33 @@
 
         // Render Upcoming
         // Render Upcoming
+// Locate the Upcoming render logic inside your render() function
+// --- REPLACE THE UPCOMING RENDER BLOCK WITH THIS ---
 const upcomingList = document.getElementById('upcoming-list');
+
 if (localUpcoming.length > 0) {
     document.getElementById('upcoming-section').style.display = 'block';
-    upcomingList.innerHTML = localUpcoming.map(u => `
-        <div class="card upcoming-card" style="width:200px;" onclick="openModal('${u.id}', 'upcoming')">
-            <div class="delete-btn" onclick="deleteEntry(event, '${u.id}', 'upcoming')">X</div>
-            <div class="timer-tag">${getRemainingTime(u.releaseDate)}</div>
-            <span class="type-tag">${u.type}</span>
-            <img src="${u.img}">
-            <div class="title-wrapper">
-                <div class="scroll-text-container">
-                    <h3>${u.title}</h3>
-                </div>
-            </div>
-        </div>`).join('');
+    
+    // Create the HTML for one set of cards
+    const cardHTML = localUpcoming.map(u => `
+    <div class="card upcoming-card-belt" onclick="openModal('${u.id}', 'upcoming')">
+        <div class="delete-btn" onclick="event.stopPropagation(); deleteEntry(event, '${u.id}', 'upcoming')">X</div>
+        <div class="timer-tag">${getRemainingTime(u.releaseDate)}</div>
+        <span class="type-tag" style="font-size: 7px; margin-bottom: 4px;">${u.type}</span>
+        <img src="${u.img}">
+        <div class="title-wrapper" style="margin-top: 0;">
+            <h3 style="font-size: 0.7rem; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${u.title}</h3>
+        </div>
+    </div>`).join('');
+
+
+    // Inject it TWICE to create the seamless loop effect
+    upcomingList.innerHTML = cardHTML + cardHTML;
+
 } else {
     document.getElementById('upcoming-section').style.display = 'none';
 }
+// --- END OF REPLACEMENT ---
 
 
         // Render Albums
