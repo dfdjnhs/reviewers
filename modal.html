@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vault Entry Details</title>
+    <style>
+        :root {
+            --bg: #f4f4f4;
+            --card: #ffffff;
+            --accent: #ff0055;
+            --black: #000000;
+            --border: 3px solid #000000;
+        }
+
+        /* 1. Page Background & Container */
+        .entry-view {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            background-image: radial-gradient(var(--black) 1px, transparent 0);
+            background-size: 20px 20px;
+            padding: 60px 5%;
+            min-height: 100vh;
+        }
+
+        .entry-container {
+            max-width: 650px;
+            margin: 0;
+            background: var(--card);
+            border: var(--border);
+            box-shadow: 15px 15px 0px var(--black);
+            padding: 40px;
+        }
+
+        /* 2. Media Styling */
+        .cover-wrapper {
+            position: relative;
+            margin-bottom: 40px;
+        }
+
+        .cover-art {
+            width: 100%;
+            max-width: 350px;
+            display: block;
+            margin: 0 auto;
+            border: 5px solid black;
+            z-index: 2;
+            box-shadow: 10px 10px 0px #777;
+        }
+
+        .cinema-poster {
+            aspect-ratio: 2/3;
+            max-width: 300px;
+        }
+
+        /* 3. Typography */
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            text-align: center;
+            line-height: 0.9;
+            margin: 10px 0;
+            letter-spacing: -2px;
+        }
+
+        .sub-heading {
+            font-size: 1.1rem;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        /* 4. Brutalist Badge */
+        .status-badge {
+            background: white;
+            color: black;
+            padding: 20px 40px;
+            font-size: 3.5rem;
+            font-weight: 1000;
+            width: fit-content;
+            margin: 0 auto 40px auto;
+            transform: rotate(-2deg);
+            border: 10px solid black;
+            box-shadow: 15px 15px 0px #AAAAAA;
+        }
+
+        /* 5. Review & Tracks */
+        .review-box {
+            border-#42445A: 10px solid var(--black);
+            background: #FFC3F3;
+            padding: 25px;
+            font-size: 1.1rem;
+            font-style: italic;
+            margin-bottom: 20px;
+            transform: rotate(1deg);
+            border: 6px solid black;
+            box-shadow: 8px 8px 0px black;
+        }
+
+        .tracklist-header {
+            font-size: 0.8rem;
+            font-weight: 900;
+            background: var(--black);
+            color: #fff;
+            padding: 5px 10px;
+            display: inline-block;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .track-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 5px;
+            border-bottom: 2px solid #eee;
+            font-weight: bold;
+        }
+
+        .track-item:hover { background: #fff0f5; }
+    </style>
+</head>
+<body>
+
+    <div class="entry-view">
+        <div class="entry-container">
+            <div id="content-target"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { albums as initialAlbums, cinema as initialCinema } from './data.js';
+
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('id');
+        const type = params.get('type');
+
+        const localAlbums = JSON.parse(localStorage.getItem('vault_albums')) || [];
+        const localCinema = JSON.parse(localStorage.getItem('vault_cinema')) || [];
+        const localUpcoming = JSON.parse(localStorage.getItem('vault_upcoming')) || [];
+
+        const allAlbums = [...initialAlbums, ...localAlbums];
+        const allCinema = [...initialCinema, ...localCinema];
+
+        let item;
+        if (type === 'upcoming') {
+            item = localUpcoming.find(i => i.id == id);
+        } else if (type === 'album') {
+            item = allAlbums.find(i => i.id == id);
+        } else {
+            item = allCinema.find(i => i.id == id);
+        }
+
+        if (item) {
+            const isCinema = type === 'cinema' || item.type === 'CINEMA';
+            
+            document.getElementById('content-target').innerHTML = `
+                <div class="cover-wrapper">
+                    <img src="${item.img || item.poster}" class="cover-art ${isCinema ? 'cinema-poster' : ''}">
+                </div>
+                
+                <h1>${item.title}</h1>
+                <p class="sub-heading">${item.artist || item.cast || 'VAULT_ARCHIVE'}</p>
+                
+                <div class="status-badge">
+                    ${type === 'upcoming' ? '???' : item.score}
+                </div>
+
+                <div class="review-box">
+                    "${item.review || 'No log entry available for this item.'}"
+                </div>
+
+                ${item.tracks && item.tracks.length > 0 ? `
+                    <span class="tracklist-header">TRACKLIST</span>
+                    <div class="track-list">
+                        ${item.tracks.map(t => `
+                            <div class="track-item">
+                                <span>${t.name}</span>
+                                <span>${type === 'upcoming' ? '--' : t.rating}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+            `;
+        } else {
+            document.getElementById('content-target').innerHTML = "<h1>ENTRY_NOT_FOUND</h1>";
+        }
+    </script>
+</body>
+</html>
