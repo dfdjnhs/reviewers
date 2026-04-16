@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vault Search // Query_Protocol</title>
+    <style>
+        :root {
+            --bg: #f4f4f4;
+            --black: #000000;
+            --accent: #ff0055;
+            --border: 3px solid #000000;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            background-image: radial-gradient(var(--black) 1px, transparent 0);
+            background-size: 20px 20px;
+            margin: 0;
+            padding: 40px 5%;
+        }
+
+        .search-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* The Giant Search Input */
+        .search-box {
+            width: 100%;
+            background: #fff;
+            border: 10px solid black;
+            padding: 20px;
+            font-size: 1rem;
+            font-weight: 900;
+            outline: none;
+            box-shadow: 10px 10px 0px var(--black);
+            margin-bottom: 40px;
+            box-sizing: border-box;
+        }
+
+        .search-box:focus {
+            border-color: var(--accent);
+        }
+
+        /* Results List */
+        #results-container {
+            display: grid;
+            gap: 25px;
+        }
+
+        .result-item {
+            background: #fff;
+            border: 2px solid var(--black);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-decoration: none;
+            color: var(--black);
+            font-weight: 900;
+            transition: transform 0.1s;
+        }
+
+        .result-item:hover {
+            transform: translateX(10px);
+            background: var(--black);
+            color: #fff;
+        }
+
+        .result-meta {
+            font-size: 0.6rem;
+            opacity: 0.6;
+            text-transform: uppercase;
+        }
+
+        .badge {
+            background: var(--black);
+            color: #fff;
+            padding: 4px 8px;
+            font-size: 0.7rem;
+            margin-left: 10px;
+        }
+
+        .result-item:hover .badge {
+            background: var(--accent);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="search-wrapper">
+        <input type="text" id="vault-query" class="search-box" placeholder="Album/Series title here..." autofocus>
+        
+        <div id="results-container">
+            </div>
+    </div>
+
+    <script type="module">
+        import { albums as initialAlbums, cinema as initialCinema } from './data.js';
+
+        const resultsContainer = document.getElementById('results-container');
+        const searchInput = document.getElementById('vault-query');
+
+        // 1. Fetch all data (Local + Initial)
+        const localAlbums = JSON.parse(localStorage.getItem('vault_albums')) || [];
+        const localCinema = JSON.parse(localStorage.getItem('vault_cinema')) || [];
+        
+        const allData = [
+            ...initialAlbums.map(i => ({ ...i, type: 'album' })),
+            ...initialAlbums.map(i => ({ ...i, type: 'album' })),
+            ...localAlbums.map(i => ({ ...i, type: 'album' })),
+            ...initialCinema.map(i => ({ ...i, type: 'cinema' })),
+            ...localCinema.map(i => ({ ...i, type: 'cinema' }))
+        ];
+
+        // 2. Search Function
+        function performSearch(query) {
+            resultsContainer.innerHTML = '';
+            if (!query) return;
+
+            const filtered = allData.filter(item => 
+                item.title.toLowerCase().includes(query.toLowerCase()) ||
+                (item.artist && item.artist.toLowerCase().includes(query.toLowerCase())) ||
+                (item.cast && item.cast.toLowerCase().includes(query.toLowerCase()))
+            );
+
+            filtered.forEach(item => {
+                const div = document.createElement('a');
+                div.className = 'result-item';
+                div.href = `modal.html?id=${item.id}&type=${item.type}`;
+                
+                div.innerHTML = `
+                    <div>
+                        <span class="result-meta"> ${item.type}</span>
+                        <div>${item.title}</div>
+                    </div>
+                    <div>
+                        <span class="badge">${item.score || '??'}</span>
+                    </div>
+                `;
+                resultsContainer.appendChild(div);
+            });
+
+            if (filtered.length === 0) {
+                resultsContainer.innerHTML = '<div style="text-align:center; font-family:monospace; opacity:0.5;">No results found.</div>';
+            }
+        }
+
+        // 3. Event Listener
+        searchInput.addEventListener('input', (e) => performSearch(e.target.value));
+    </script>
+</body>
+</html>
