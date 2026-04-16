@@ -169,7 +169,7 @@
                 </div>
 
                 <div class="review-box">
-                    "${item.review || 'No log entry available for this item.'}"
+                    ${type === 'upcoming' ? 'Nothing here yet.' : item.review}
                 </div>
 
                 ${item.tracks && item.tracks.length > 0 ? `
