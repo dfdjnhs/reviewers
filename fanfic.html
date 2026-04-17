@@ -33,11 +33,7 @@
         .modal-content { background: var(--white); border: var(--border); width: 95%; max-width: 900px; padding: 20px; box-shadow: 15px 15px 0 var(--black); position: relative; }
         .editor-wrapper { background: #111; padding: 20px; height: 85vh; display: flex; flex-direction: column; border: var(--border); }
         .editor-paper { background: #fff; height: 100%; display: flex; flex-direction: column; padding: 30px; overflow: hidden; }
-#writing-board {
-    font-style: normal !important;
-    line-height: 1.6;
-    outline: none; /* Removes the blue browser outline */
-}
+
 
 /* This makes the cursor look better in the editor */
 [contenteditable="true"] {
@@ -148,6 +144,35 @@
     outline: none;
     font-family: 'Inter', sans-serif;
     text-transform: uppercase;
+}
+/* Ensure the editor wrapper fits the screen and scrolls */
+.editor-wrapper {
+    background: #111;
+    padding: 20px;
+    height: 90vh; /* Keeps it within the viewport */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Prevents the dark background from scrolling */
+}
+
+/* This is the white 'paper' area - it MUST scroll */
+.editor-paper {
+    background: #fff;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 30px;
+    overflow-y: auto; /* Adds the scrollbar here */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling for mobile */
+}
+
+/* Ensure the writing board expands to fit all content */
+#writing-board {
+    min-height: 100%;
+    outline: none;
+    line-height: 1.8;
+    font-size: 1.1rem;
+    font-style: normal;
 }
 
     </style>
