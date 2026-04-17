@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>The Vault | Writer</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
@@ -29,10 +29,100 @@
         .type-tag { font-size: 10px; font-weight: 900; text-transform: uppercase; background: var(--black); color: white; padding: 2px 6px; display: inline-block; margin-bottom: 8px; }
 
         /* MODAL & EDITOR (The "Dark Studio") */
-        #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .modal-content { background: var(--white); border: var(--border); width: 95%; max-width: 900px; padding: 20px; box-shadow: 15px 15px 0 var(--black); position: relative; }
+#overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(8px);
+    transition: opacity 0.3s ease;
+}
+/* This class removes centering so the editor can pin to the top-left */
+#overlay.editor-active {
+    display: block !important; /* Switch from flex to block */
+    padding: 0 !important;
+    overflow: hidden;
+}
+
+/* Ensure the target doesn't restrict the size */
+#overlay.editor-active #modal-target {
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* Snappy Modal Animation */
+@keyframes modalPop {
+    0% { transform: scale(0.9) translateY(20px); opacity: 0; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.modal-content {
+    background: var(--white);
+    border: var(--border);
+    width: 95%;
+    max-width: 600px;
+    padding: 30px;
+    box-shadow: 10px 10px 0 var(--black);
+    position: relative;
+    /* Apply the animation */
+    animation: modalPop 0.3s var(--ease) forwards;
+}
+
+/* Make buttons feel "pressable" */
+.admin-toggle, .edit-btn, .upload-btn {
+    transition: all 0.1s ease;
+    position: relative;
+    top: 0;
+    left: 0;
+}
+
+.admin-toggle:hover, .edit-btn:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0 var(--black);
+}
+
+.admin-toggle:active, .edit-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 0px 0px 0 var(--black);
+}
+
+/* Chapter row hover effect */
+.chapter-row {
+    transition: transform 0.2s var(--ease), background 0.2s ease;
+    border: 2px solid transparent;
+}
+
+.chapter-row:hover {
+    background: rgba(255, 255, 255, 0.5);
+    transform: scale(1.02);
+    border: 2px solid var(--black);
+    box-shadow: 4px 4px 0 var(--black);
+    padding-left: 10px;
+}
+
         .editor-wrapper { background: #111; padding: 20px; height: 85vh; display: flex; flex-direction: column; border: var(--border); }
-        .editor-paper { background: #fff; height: 100%; display: flex; flex-direction: column; padding: 30px; overflow: hidden; }
+/* This container mimics a physical sheet of paper */
+.editor-paper {
+    background: #fff;
+    width: 90vw; /* Page width is 90% of the screen */
+    max-width: 800px; /* Limits size on desktop */
+    aspect-ratio: 8.5 / 11; /* Forces the standard Letter paper shape */
+    margin: 0 auto;
+    padding: 5%; /* Padding scales with the page */
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    box-shadow: 10px 10px 0px #000;
+    border: 3px solid #000;
+}
+
 
 
 /* This makes the cursor look better in the editor */
@@ -46,21 +136,6 @@
 .tracklist-container {
     margin-top: 20px;
     border-top: 2px solid var(--black);
-}
-
-.chapter-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid rgba(0,0,0,0.1);
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.chapter-row:hover {
-    background: rgba(0,0,0,0.05);
-    padding-left: 5px;
 }
 
 .chapter-number {
@@ -145,34 +220,137 @@
     font-family: 'Inter', sans-serif;
     text-transform: uppercase;
 }
-/* Ensure the editor wrapper fits the screen and scrolls */
+/* This ensures the editor is a true "Studio" overlay */
 .editor-wrapper {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 99999; 
     background: #111;
-    padding: 20px;
-    height: 90vh; /* Keeps it within the viewport */
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* Prevents the dark background from scrolling */
 }
 
-/* This is the white 'paper' area - it MUST scroll */
-.editor-paper {
-    background: #fff;
-    flex-grow: 1;
+.editor-ui-header {
+    width: 100%;
+    padding: 10px 20px;
+    background: #000;
+    flex-shrink: 0;
+}
+
+.editor-scroller {
+    flex: 1;
+    overflow-y: auto;
+    width: 100%;
     display: flex;
-    flex-direction: column;
-    padding: 30px;
-    overflow-y: auto; /* Adds the scrollbar here */
-    -webkit-overflow-scrolling: touch; /* Smooth scrolling for mobile */
+    justify-content: center;
+    padding: 40px 0;
+}
+
+/* Updated Paper look for better focus */
+.editor-paper {
+    width: 90%;
+    max-width: 800px;
+    background: #fff;
+    color: #000;
+    padding: 50px;
+    box-shadow: 15px 15px 0px #000;
+    border: 3px solid #000;
+    min-height: 1100px; /* A4 Paper feel */
+}
+
+
+/* Better Mobile Handling */
+@media (max-width: 600px) {
+    .editor-paper {
+        padding: 30px 20px;
+        box-shadow: 10px 10px 0px #000;
+    }
+    .editor-ui-header { padding: 10px; }
+}
+
+/* Animated Toolbars */
+#format-tools, #adv-tools {
+    animation: slideDown 0.3s var(--ease);
+}
+
+@keyframes slideDown {
+    from { transform: translateY(-10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
 }
 
 /* Ensure the writing board expands to fit all content */
+/* Lock font size for professional drafting */
 #writing-board {
-    min-height: 100%;
+    /* calc(minimum_size + responsive_growth) */
+    font-size: calc(12px + 0.5vw) !important; 
+    line-height: 1.5;
+    font-family: 'Inter', sans-serif;
+    color: #000;
     outline: none;
-    line-height: 1.8;
-    font-size: 1.1rem;
-    font-style: normal;
+    text-align: justify; /* Gives it that professional manuscript look */
+    word-wrap: break-word;
+}
+
+/* Ensure images and bold text don't break the layout */
+#writing-board b, #writing-board strong {
+    font-weight: 900;
+}
+
+/* Tool Bar for Word Count & Find/Replace */
+.editor-toolbar {
+    display: flex;
+    gap: 10px;
+    background: #f0f0f0;
+    padding: 8px;
+    border-bottom: 2px solid #000;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.tool-input {
+    border: 2px solid #000;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: 700;
+    width: 120px;
+}
+
+.stats-bar {
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    opacity: 0.7;
+}
+.format-bar {
+    display: flex;
+    gap: 5px;
+    background: #222;
+    padding: 5px 10px;
+    border-bottom: 1px solid #444;
+}
+
+.format-btn {
+    background: #333;
+    color: white;
+    border: 1px solid #555;
+    padding: 2px 8px;
+    font-size: 12px;
+    font-weight: 900;
+    cursor: pointer;
+    border-radius: 2px;
+}
+
+.format-btn:hover {
+    background: #FFCBEA;
+    color: black;
+}
+
+.format-btn.active {
+    background: #22c55e;
+    color: black;
 }
 
     </style>
