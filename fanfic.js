@@ -9,40 +9,46 @@ window.viewStory = (storyId) => {
     if (!story) return;
 
     const target = document.getElementById('modal-target');
+    const overlay = document.getElementById('overlay');
+
+    // 1. Reset everything to "List Mode"
+    overlay.classList.remove('editor-active'); 
+    overlay.style.display = 'flex'; // Re-enable centering
+    
+    // 2. CRITICAL: Clear the inline styles left over by the editor
+    target.style.cssText = ""; 
+    target.className = 'modal-content'; 
+
     target.innerHTML = `
-        <div class="modal-content">
-            <div style="display:flex; justify-content:space-between; align-items:start;">
-                <div>
-                    <span class="type-tag" style="background:var(--black); color:white;">${story.tag}</span>
-                    <h2 style="font-size: 2.5rem; font-weight: 900; margin-top:5px;">${story.title}</h2>
-                </div>
-                <button onclick="closeModal()" style="background:none; border:none; font-weight:900; cursor:pointer; font-size:1.2rem;">[X]</button>
+        <div class="view-header" style="display:flex; justify-content:space-between; align-items:start;">
+            <div>
+                <span class="type-tag">SHORT STORY</span>
+                <h2 style="margin:5px 0; font-size:2.2rem; font-weight:900; line-height:1;">${story.title}</h2>
             </div>
-            
-            <div style="height:2px; background:var(--black); margin: 20px 0;"></div>
-            
-            <div class="tracklist-container" style="max-height: 300px; overflow-y: auto; padding-right: 10px;">
-                ${story.chapters.map((ch, i) => `
-                    <div class="chapter-row" style="margin-bottom:10px; padding:12px; background:white; border:2px solid black;">
-                        <div onclick="openEditor('${story.id}', ${i})" style="flex-grow:1; cursor:pointer; font-weight:900;">
-                            <span style="opacity:0.3; margin-right:10px;">${String(i + 1).padStart(2, '0')}</span> 
-                            ${ch.title}
-                        </div>
-                        <div style="display:flex; gap:8px;">
-                            <button onclick="renameChapter('${story.id}', ${i})" class="edit-btn" style="background:#3b82f6; color:white; border:2px solid black;">RENAME</button>
-                            <button onclick="deleteChapter('${story.id}', ${i})" class="edit-btn" style="background:#ff4444; color:white; border:2px solid black;">TRASH</button>
-                        </div>
+            <button onclick="closeModal()" style="background:none; border:none; font-weight:900; cursor:pointer; font-size:1.2rem;">[X]</button>
+        </div>
+        
+        <div style="height:2px; background:#000; margin: 15px 0;"></div>
+        
+        <div class="tracklist" style="max-height:350px; overflow-y:auto; padding-right:5px;">
+            ${story.chapters.map((ch, i) => `
+                <div class="chapter-row" style="display:flex; justify-content:space-between; align-items:center; border:2px solid #000; padding:12px; margin-bottom:10px; background:#fff;">
+                    <div onclick="openEditor('${story.id}', ${i})" style="cursor:pointer; font-weight:900; flex:1;">
+                        <span style="opacity:0.3; margin-right:10px;">0${i+1}</span> ${ch.title}
                     </div>
-                `).join('')}
-            </div>
-            
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-top:25px;">
-                <button class="admin-toggle" style="background:#22c55e; border:3px solid black; padding:15px;" onclick="addNewChapter('${story.id}')">+ NEW CHAPTER</button>
-                <button class="admin-toggle" style="background:#ff4444; border:3px solid black; padding:15px; color:white;" onclick="deleteStory('${story.id}')">DELETE PIECE</button>
-            </div>
+                    <div style="display:flex; gap:8px;">
+                        <button onclick="renameChapter('${story.id}', ${i})" class="edit-btn" style="background:#3b82f6; color:#fff;">RENAME</button>
+                        <button onclick="deleteChapter('${story.id}', ${i})" class="edit-btn" style="background:#ff4444; color:#fff;">TRASH</button>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+        
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:20px;">
+            <button onclick="addNewChapter('${story.id}')" class="upload-btn" style="background:#22c55e;">+ NEW CHAPTER</button>
+            <button onclick="deleteStory('${story.id}')" class="upload-btn" style="background:#ff4444; color:#fff;">DELETE PIECE</button>
         </div>
     `;
-    document.getElementById('overlay').style.display = 'flex';
 };
 
 // 2. DELETE CHAPTER LOGIC
@@ -171,7 +177,9 @@ window.openEditor = (storyId, chapterIndex) => {
     overlay.classList.add('editor-active');
     
     // 2. Clear any lingering modal styling
-    target.style.cssText = "background:transparent; border:none; box-shadow:none;";
+    // Clean the target completely so it doesn't interfere with the scroller
+target.style.cssText = "display: block; width: 100%; height: 100%; padding: 0; margin: 0; background: transparent; border: none; box-shadow: none;";
+
 
     target.innerHTML = `
         <div class="editor-wrapper">
@@ -319,8 +327,14 @@ window.deleteStory = (storyId) => {
 };
 
 window.closeModal = () => {
-    document.getElementById('overlay').style.display = 'none';
+    const target = document.getElementById('modal-target');
+    const overlay = document.getElementById('overlay');
+    
+    target.className = ''; // Wipe all classes
+    target.innerHTML = '';
+    overlay.style.display = 'none';
 };
+
 
 // --- ADVANCED EDITOR TOOLS ---
 
