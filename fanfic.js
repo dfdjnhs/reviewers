@@ -101,21 +101,24 @@ window.openEditor = (storyId, chapterIndex) => {
     target.innerHTML = `
         <div class="editor-wrapper">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; color:white;">
-                <span id="mode-indicator" style="font-weight:900; font-size:0.7rem; color: #aaa;">READING MODE</span>
+                <span id="mode-indicator" style="font-weight:900; font-size:0.7rem; opacity:0.6;">READING MODE</span>
                 <div style="display:flex; gap:10px;">
                     <button id="edit-toggle-btn" onclick="enableEditing()" style="background:#FFCBEA; border:none; padding:5px 15px; font-weight:900; cursor:pointer;">UNLOCK EDIT</button>
                     <button id="save-btn" onclick="saveChapter('${storyId}', ${chapterIndex})" style="background:#22c55e; border:none; padding:5px 15px; font-weight:900; cursor:pointer; display:none;">SAVE CHANGES</button>
                     <button onclick="viewStory('${storyId}')" style="background:#444; color:white; border:none; padding:5px 15px; font-weight:900; cursor:pointer;">EXIT</button>
                 </div>
             </div>
+            
             <div class="editor-paper">
-                <input type="text" id="edit-ch-title" value="${chapter.title}" readonly style="border:none; outline:none; font-style:normal;">
-                <div id="writing-board" contenteditable="false" spellcheck="false" style="font-style: normal; min-height: 400px; padding: 10px;">${chapter.content || ""}</div>
+                <input type="text" id="edit-ch-title" value="${chapter.title}" readonly style="border:none; outline:none; font-family:'Inter', sans-serif; font-weight:900; font-size:1.8rem; text-transform:uppercase; margin-bottom:20px; width:100%;">
+                
+                <div id="writing-board" contenteditable="false" spellcheck="false">
+                    ${chapter.content || "Start writing..."}
+                </div>
             </div>
         </div>
     `;
 };
-
 
 window.enableEditing = () => {
     const board = document.getElementById('writing-board');
@@ -128,7 +131,7 @@ window.enableEditing = () => {
     
     // 2. Visual Feedback
     board.style.background = "#fff";
-    board.style.border = "2px dashed #22c55e"; // Green dash shows it's active
+    board.style.border = "0px dashed #22c55e"; // Green dash shows it's active
     board.focus(); // Automatically puts the cursor inside so you can start typing
     
     indicator.innerText = "EDITING MODE";
