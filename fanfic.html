@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Vault | Writer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --black: #000000;
+            --white: #FFCBEA;
+            --bg: #FFBDE4;
+            --border: 3px solid var(--black);
+            --ease: cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--black); overflow-x: hidden; min-height: 100vh; }
+        
+        /* Reusing your Brutalist Header Styles */
+        .header-area { display: flex; justify-content: space-between; align-items: flex-start; padding: 30px 5% 10px 5%; width: 100%; }
+        .nav-btn { background: none; border: none; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 0.75rem; opacity: 0.5; padding-bottom: 2px; text-decoration: none; color: black; }
+        .nav-btn.active { opacity: 1; border-bottom: 3px solid var(--black); }
+        .admin-toggle { background: var(--black); color: #fff; border: none; padding: 10px 15px; font-weight: 900; cursor: pointer; text-transform: uppercase; }
+
+        /* Story Grid */
+        .scroll-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 30px; padding: 20px 5%; }
+        .card { background: var(--white); border: var(--border); padding: 20px; box-shadow: 6px 6px 0 var(--black); cursor: pointer; position: relative; transition: 0.2s var(--ease); }
+        .card:hover { transform: translate(-4px, -4px); box-shadow: 10px 10px 0 var(--black); }
+        .type-tag { font-size: 10px; font-weight: 900; text-transform: uppercase; background: var(--black); color: white; padding: 2px 6px; display: inline-block; margin-bottom: 8px; }
+
+        /* MODAL & EDITOR (The "Dark Studio") */
+        #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .modal-content { background: var(--white); border: var(--border); width: 95%; max-width: 900px; padding: 20px; box-shadow: 15px 15px 0 var(--black); position: relative; }
+        .editor-wrapper { background: #111; padding: 20px; height: 85vh; display: flex; flex-direction: column; border: var(--border); }
+        .editor-paper { background: #fff; height: 100%; display: flex; flex-direction: column; padding: 30px; overflow: hidden; }
+#writing-board {
+    font-style: normal !important;
+    line-height: 1.6;
+    outline: none; /* Removes the blue browser outline */
+}
+
+/* This makes the cursor look better in the editor */
+[contenteditable="true"] {
+    cursor: text;
+}
+
+
+        #ch-title { width: 100%; border: none; border-bottom: 2px solid black; font-size: 1.5rem; font-weight: 900; margin-bottom: 15px; outline: none; }
+        /* Chapter List / Tracklist Styling */
+.tracklist-container {
+    margin-top: 20px;
+    border-top: 2px solid var(--black);
+}
+
+.chapter-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.chapter-row:hover {
+    background: rgba(0,0,0,0.05);
+    padding-left: 5px;
+}
+
+.chapter-number {
+    opacity: 0.4;
+    font-size: 0.8rem;
+    margin-right: 15px;
+}
+
+/* Edit Button for Chapters */
+.edit-btn {
+    background: var(--black);
+    color: white;
+    font-size: 10px;
+    padding: 4px 8px;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+/* Fix for the overlapping inputs in the Admin Drawer */
+#admin-drawer {
+    display: none; /* Hidden by default */
+    position: fixed; /* Fixes the "top of page" bug */
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: auto;
+    max-height: 80vh; /* Prevents it from covering the whole screen */
+    background: var(--black);
+    color: var(--white);
+    border-top: var(--border);
+    padding: 20px;
+    z-index: 10000; /* Ensures it stays above the header and library */
+    overflow-y: auto;
+    box-shadow: 0 -10px 20px rgba(0,0,0,0.5);
+}
+
+/* Ensure the form inside is organized */
+.admin-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+#admin-step-2 input, 
+#admin-step-2 select {
+    background: #222;
+    color: white;
+    border: 1px solid #444;
+    padding: 12px;
+    width: 100%;
+    font-weight: 900;
+}
+
+#admin-step-2 label {
+    font-size: 10px;
+    font-weight: 900;
+    margin-bottom: -10px;
+}
+
+.upload-btn {
+    background: #22c55e;
+    color: #000;
+    border: 3px solid #000;
+    padding: 15px;
+    font-weight: 900;
+    cursor: pointer;
+    text-transform: uppercase;
+    box-shadow: 4px 4px 0 #000;
+}
+
+.upload-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 #000;
+}
+#edit-ch-title {
+    width: 100%;
+    border: none;
+    border-bottom: 2px solid black;
+    font-size: 1.5rem;
+    font-weight: 900;
+    margin-bottom: 15px;
+    outline: none;
+    font-family: 'Inter', sans-serif;
+    text-transform: uppercase;
+}
+
+    </style>
+</head>
+<body>
+
+<div class="header-area">
+    <div>
+        <h1 style="font-weight: 900; font-size: 3.5rem; letter-spacing: -3px; line-height: 0.9; margin: 0;">WRITER.</h1>
+        <nav style="margin-top:10px; display:flex; gap:15px;">
+            <a href="index.html" class="nav-btn">THE VAULT</a>
+            <button class="nav-btn active">LIBRARY</button>
+        </nav>
+    </div>
+    <div class="action-bar">
+        <button class="admin-toggle" onclick="openStoryCreator()">+ NEW STORY</button>
+    </div>
+</div>
+
+<div id="admin-drawer">
+    <div class="admin-content">
+        <h3 style="text-align: center; border-bottom: 1px solid #444; padding-bottom: 10px;">NEW PIECE</h3>
+        
+        <div id="admin-step-2">
+            <label style="font-size: 10px; color: #888;">TITLE</label>
+            <input type="text" id="entry-title" placeholder="NAME YOUR PIECE...">
+
+            <label style="font-size: 10px; color: #888;">TYPE</label>
+            <select id="entry-tags">
+                <option value="Short Story">Short Story</option>
+                <option value="Fanfic">Fanfic</option>
+                <option value="Novel">Novel</option>
+            </select>
+
+            <label style="font-size: 10px; color: #888;">NO. OF CHAPTERS</label>
+            <input type="number" id="entry-chapters" value="1" min="1">
+
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button onclick="executeUpload()" style="flex: 2; background: #22c55e; color: black; border: none; padding: 15px; font-weight: 900; cursor: pointer;">UPLOAD</button>
+                <button onclick="toggleDrawer(false)" style="flex: 1; background: #444; color: white; border: none; padding: 15px; font-weight: 900; cursor: pointer;">CANCEL</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div style="width: 90%; height: 3px; background: black; margin: 0 auto 30px auto;"></div>
+
+<section id="library">
+    <div class="scroll-container" id="story-list">
+        </div>
+</section>
+
+<div id="overlay">
+    <div class="modal-content" id="modal-target"></div>
+</div>
+
+<script src="fanfic.js" type="module"></script>
+</body>
+</html>
