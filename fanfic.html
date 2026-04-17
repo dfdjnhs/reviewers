@@ -27,7 +27,8 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--bla
 .card { background: var(--pink); border: var(--border); padding: 20px; box-shadow: 6px 6px 0 var(--black); cursor: pointer; transition: 0.2s var(--ease); }
 .card:hover { transform: translate(-4px, -4px); box-shadow: 10px 10px 0 var(--black); }
 
-/* THE OVERLAY SYSTEM */
+/* THE BASE OVERLAY (Used for the pink Rival Fam pop-up) */
+/* THE OVERLAY - Always centers the content unless in editor mode */
 #overlay {
     display: none;
     position: fixed;
@@ -35,36 +36,99 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--bla
     width: 100%; height: 100%;
     background: rgba(0,0,0,0.85);
     z-index: 9999;
-    align-items: center;
+    align-items: center; 
     justify-content: center;
     backdrop-filter: blur(5px);
 }
 
-/* Switches from centered Modal to full-screen Studio */
+/* THE MODAL BOX - This is your pink/white container */
+.modal-content {
+    background: var(--white) !important;
+    border: var(--border) !important;
+    width: 90% !important;
+    max-width: 550px !important;
+    padding: 25px !important;
+    box-shadow: 10px 10px 0 var(--black) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    position: relative;
+    animation: modalPop 0.3s var(--ease) forwards;
+}
+
+/* EDITOR MODE - This kills the centering and the pink box styles */
 #overlay.editor-active {
     display: block !important;
-    padding: 0;
 }
 
-/* PREVIEW MODAL (The Pink One) */
-.modal-content {
-    background: var(--pink);
-    border: var(--border);
-    width: 90%;
-    max-width: 550px;
-    padding: 25px;
-    box-shadow: 12px 12px 0 var(--black);
-    position: relative;
+#overlay.editor-active #modal-target {
+    all: unset; /* Resets the box styles so the editor can be fullscreen */
+    display: block;
 }
 
-/* THE STUDIO EDITOR (The Dark One) */
+/* 1. The Full Screen Container */
 .editor-wrapper {
-    background: #111;
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100vw;
     height: 100vh;
+    background: #111; /* The dark void */
     display: flex;
     flex-direction: column;
+    z-index: 10000;
 }
+
+/* 2. The Area That Actually Scrolls */
+.editor-scroller {
+    flex: 1;
+    overflow-y: scroll; /* Forces vertical scrollability */
+    -webkit-overflow-scrolling: touch; /* Makes it smooth on phones */
+    padding: 20px 0 100px 0; /* Extra bottom padding so text isn't at the very edge */
+    display: block; /* Changed from flex to block to allow natural growth */
+}
+
+/* 3. The Physical "Paper" Sheet */
+
+/* 4. The Board where you type */
+#writing-board {
+    min-height: 500px;
+    height: auto; /* IMPORTANT: Let it grow as long as the story is */
+    outline: none;
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: #000;
+    text-align: left;
+    word-wrap: break-word;
+    overflow: visible; /* Prevent internal clipping */
+}
+
+/* This makes the target itself the pink/white box */
+#modal-target.list-view {
+    background: #fff; /* Changed to white based on your last pic, or use var(--pink) */
+    border: 3px solid #000;
+    width: 90%;
+    max-width: 500px;
+    padding: 25px;
+    box-shadow: 10px 10px 0px #000;
+    display: flex;
+    flex-direction: column;
+    animation: modalPop 0.3s ease-out;
+}
+
+/* This ONLY affects the Writing Studio */
+.editor-paper {
+    background: #fff; /* White paper */
+    width: 90%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 60px 50px;
+    border: 3px solid #000;
+    box-shadow: 15px 15px 0px #000;
+}
+
+
+/* THE STUDIO EDITOR (The Dark One) */
+
 
 .editor-ui-header {
     background: #000;
@@ -73,33 +137,8 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--bla
     flex-shrink: 0;
 }
 
-.editor-scroller {
-    flex: 1;
-    overflow-y: auto;
-    padding: 40px 15px;
-    display: flex;
-    justify-content: center;
-    background: #1a1a1a;
-}
 
-.editor-paper {
-    background: white;
-    width: 100%;
-    max-width: 800px;
-    min-height: 1000px;
-    padding: 60px 50px;
-    border: 3px solid #000;
-    box-shadow: 15px 15px 0px #000;
-}
-
-#writing-board {
-    outline: none;
-    font-size: 1.1rem;
-    line-height: 1.6;
-    color: #222;
-    text-align: left;
-    min-height: 800px;
-}
+/* Change height from 85vh to auto so it expands with content */
 
 /* UI ELEMENTS */
 .type-tag { font-size: 10px; font-weight: 900; text-transform: uppercase; background: var(--black); color: white; padding: 2px 6px; display: inline-block; margin-bottom: 8px; }
@@ -376,7 +415,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--bla
 </section>
 
 <div id="overlay">
-    <div class="modal-content" id="modal-target"></div>
+    <div id="modal-target"></div> 
 </div>
 
 <script src="fanfic.js" type="module"></script>
